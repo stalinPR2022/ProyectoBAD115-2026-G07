@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: sistema-encuestas
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sistema_encuestas
+    username: postgres
+    password: 1234
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+  server:
+    port: 8080
