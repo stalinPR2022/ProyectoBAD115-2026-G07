@@ -1,11 +1,17 @@
 package com.proyecto_bad115.sistema_encuestas.controller;
 
-import com.proyecto_bad115.sistema_encuestas.model.Usuario;
+import com.proyecto_bad115.sistema_encuestas.dto.ActualizarUsuarioDTO;
+import com.proyecto_bad115.sistema_encuestas.dto.CrearUsuarioDTO;
+import com.proyecto_bad115.sistema_encuestas.dto.UsuarioResponseDTO;
 import com.proyecto_bad115.sistema_encuestas.service.UsuarioService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -19,22 +25,61 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<Usuario> listarUsuarios() {
-        return usuarioService.listarUsuarios();
+    public ResponseEntity<List<UsuarioResponseDTO>> listar() {
+        return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
     @GetMapping("/{id}")
-    public Optional<Usuario> buscarUsuario(@PathVariable Integer id) {
-        return usuarioService.buscarPorId(id);
+    public ResponseEntity<?> buscar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(usuarioService.buscarPorId(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+        }
     }
 
     @PostMapping
-    public Usuario guardarUsuario(@RequestBody Usuario usuario) {
-        return usuarioService.guardarUsuario(usuario);
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearUsuarioDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.crearUsuario(dto));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("mensaje", e.getMessage()));
+        }
     }
 
-    @DeleteMapping("/{id}")
-    public void eliminarUsuario(@PathVariable Integer id) {
-        usuarioService.eliminarUsuario(id);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizar(@PathVariable Integer id, @Valid @RequestBody ActualizarUsuarioDTO dto) {
+        try {
+            return ResponseEntity.ok(usuarioService.actualizarUsuario(id, dto));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/activar")
+    public ResponseEntity<?> activar(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(usuarioService.activarUsuario(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/dar-de-baja")
+    public ResponseEntity<?> darDeBaja(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(usuarioService.darDeBaja(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/desbloquear")
+    public ResponseEntity<?> desbloquear(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(usuarioService.desbloquearUsuario(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+        }
     }
 }

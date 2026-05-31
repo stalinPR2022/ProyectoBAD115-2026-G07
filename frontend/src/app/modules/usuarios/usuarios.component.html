@@ -1,0 +1,134 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Gestión de Usuarios</h2>
+      <p class="page-subtitle">Administra las cuentas de usuario del sistema</p>
+    </div>
+    <button class="btn-primary" (click)="abrirCrear()">+ Nuevo usuario</button>
+  </div>
+
+  @if (exito) {
+    <div class="alert alert-success">{{ exito }}</div>
+  }
+  @if (error && !mostrarModal) {
+    <div class="alert alert-error">{{ error }}</div>
+  }
+
+  <div class="card">
+    @if (cargando) {
+      <div class="empty-state">Cargando usuarios...</div>
+    } @else if (usuarios.length === 0) {
+      <div class="empty-state">No hay usuarios registrados.</div>
+    } @else {
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Roles</th>
+            <th>Estado</th>
+            <th>Intentos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of usuarios; track u.idUser) {
+            <tr>
+              <td>{{ u.idUser }}</td>
+              <td>{{ u.nombreUser }}</td>
+              <td>{{ u.emailUser }}</td>
+              <td>
+                @for (rol of u.roles; track rol) {
+                  <span class="badge badge-rol">{{ rol }}</span>
+                }
+              </td>
+              <td>
+                <span class="badge"
+                  [class.badge-activo]="u.estadoUser === ACTIVO"
+                  [class.badge-inactivo]="u.estadoUser === INACTIVO"
+                  [class.badge-bloqueado]="u.estadoUser === BLOQUEADO">
+                  {{ estadoLabel(u.estadoUser) }}
+                </span>
+              </td>
+              <td class="text-center">{{ u.intentosFallidos }}</td>
+              <td class="acciones">
+                <button class="btn-icon btn-edit" title="Editar" (click)="abrirEditar(u)">✏️</button>
+                @if (u.estadoUser === ACTIVO) {
+                  <button class="btn-icon btn-warning" title="Dar de baja" (click)="darDeBaja(u.idUser)">🚫</button>
+                }
+                @if (u.estadoUser === INACTIVO) {
+                  <button class="btn-icon btn-success" title="Activar" (click)="activar(u.idUser)">✅</button>
+                }
+                @if (u.estadoUser === BLOQUEADO) {
+                  <button class="btn-icon btn-success" title="Desbloquear" (click)="desbloquear(u.idUser)">🔓</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (mostrarModal) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modoEdicion ? 'Editar usuario' : 'Nuevo usuario' }}</h3>
+        <button class="btn-close" (click)="cerrarModal()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form">
+
+        <div class="field-group">
+          <label>Nombre completo</label>
+          <input type="text" formControlName="nombreUser" placeholder="Nombre del usuario" />
+          @if (form.get('nombreUser')?.invalid && form.get('nombreUser')?.touched) {
+            <span class="field-error">El nombre es obligatorio.</span>
+          }
+        </div>
+
+        @if (!modoEdicion) {
+          <div class="field-group">
+            <label>Correo electrónico</label>
+            <input type="email" formControlName="emailUser" placeholder="correo@ejemplo.com" />
+            @if (form.get('emailUser')?.invalid && form.get('emailUser')?.touched) {
+              <span class="field-error">Ingresa un correo válido.</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label>Contraseña</label>
+            <input type="password" formControlName="contraseniaUser" placeholder="Mín. 8 caracteres, mayúscula y símbolo" />
+            @if (form.get('contraseniaUser')?.invalid && form.get('contraseniaUser')?.touched) {
+              <span class="field-error">La contraseña es obligatoria.</span>
+            }
+          </div>
+        }
+
+        <div class="field-group">
+          <label>Fecha de nacimiento</label>
+          <input type="date" formControlName="fechaNacimiento" />
+          @if (form.get('fechaNacimiento')?.invalid && form.get('fechaNacimiento')?.touched) {
+            <span class="field-error">La fecha es obligatoria.</span>
+          }
+        </div>
+
+        @if (error) {
+          <div class="alert alert-error">{{ error }}</div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : (modoEdicion ? 'Actualizar' : 'Crear usuario') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

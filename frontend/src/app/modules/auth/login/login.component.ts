@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,12 @@ export class LoginComponent {
   loading = false;
   errorMessage = '';
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       contrasenia: ['', Validators.required]
@@ -31,9 +36,10 @@ export class LoginComponent {
 
     this.authService.login(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: () => {
-        this.errorMessage = 'Correo o contraseña incorrectos.';
+      error: (e) => {
+        this.errorMessage = e.error?.mensaje || 'Correo o contraseña incorrectos.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
