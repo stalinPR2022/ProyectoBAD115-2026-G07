@@ -19,6 +19,18 @@ spring:
     serialization:
       fail-on-empty-beans: false
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sondevia.sistema@gmail.com
+    password: sgwqqlsweygumnpz
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   server:
     port: 8080
 
