@@ -74,6 +74,7 @@
 .tipo-dicotomica { background: #eff6ff; color: #3b82f6; }
 .tipo-politomica { background: #faf5ff; color: #7c3aed; }
 .tipo-multiple { background: #fff7ed; color: #ea580c; }
+.tipo-ranking  { background: #fdf4ff; color: #a21caf; }
 
 .obligatoria-badge {
   background: #fef3c7; color: #d97706;
@@ -209,6 +210,20 @@ textarea { resize: vertical; }
   font-size: 0.875rem; color: #374151; cursor: default;
 }
 .opcion-preview-item input { cursor: default; }
+
+/* Ranking preview */
+.ranking-preview-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.875rem; color: #374151;
+  padding: 5px 8px; background: #f9fafb;
+  border: 1px solid #e5e7eb; border-radius: 6px;
+}
+.ranking-numero {
+  min-width: 22px; height: 22px; border-radius: 50%;
+  background: #a21caf; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+}
 
 /* Subtipo hint */
 .subtipo-hint {

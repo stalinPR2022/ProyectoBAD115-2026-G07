@@ -50,14 +50,25 @@
               <input type="text" placeholder="Respuesta del encuestado..." disabled class="preview-input" />
             }
             @if (p.tipoPregunta === 'CERRADA') {
-              <div class="opciones-preview">
-                @for (op of p.opciones; track op.idOpcionRespuesta) {
-                  <label class="opcion-preview-item">
-                    <input [type]="p.tipoPreguntaCerrada === 'ELECCION_MULTIPLE' ? 'checkbox' : 'radio'" disabled />
-                    <span>{{ op.textoOpcion }}</span>
-                  </label>
-                }
-              </div>
+              @if (p.tipoPreguntaCerrada === 'RANKING') {
+                <div class="opciones-preview">
+                  @for (op of p.opciones; track op.idOpcionRespuesta; let i = $index) {
+                    <div class="ranking-preview-item">
+                      <span class="ranking-numero">{{ i + 1 }}</span>
+                      <span>{{ op.textoOpcion }}</span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="opciones-preview">
+                  @for (op of p.opciones; track op.idOpcionRespuesta) {
+                    <label class="opcion-preview-item">
+                      <input [type]="p.tipoPreguntaCerrada === 'ELECCION_MULTIPLE' ? 'checkbox' : 'radio'" disabled />
+                      <span>{{ op.textoOpcion }}</span>
+                    </label>
+                  }
+                </div>
+              }
             }
           </div>
           @if (enDiseno) {
@@ -136,6 +147,11 @@
                   Múltiple
                   <span class="subtipo-hint">Varias opciones</span>
                 </button>
+                <button type="button" class="tipo-btn" [class.active]="tipoCerrada === 'RANKING'"
+                  (click)="seleccionarTipoCerrada('RANKING')">
+                  Ranking
+                  <span class="subtipo-hint">Ordenar ítems</span>
+                </button>
               </div>
             </div>
           }
@@ -166,8 +182,8 @@
                   }
                 </div>
               }
-              @if (tipoCerrada === 'ELECCION_UNICA' || tipoCerrada === 'ELECCION_MULTIPLE') {
-                <button type="button" class="btn-add-opcion" (click)="agregarOpcion()">+ Agregar opción</button>
+              @if (tipoCerrada !== 'DICOTOMICA') {
+                <button type="button" class="btn-add-opcion" (click)="agregarOpcion()">+ Agregar ítem</button>
               }
             </div>
           </div>
@@ -195,16 +211,29 @@
               }
             }
             @if (tipoPrincipal === 'CERRADA') {
-              <div class="opciones-preview">
-                @for (op of opciones; track trackByIndex($index)) {
-                  @if (op.trim()) {
-                    <label class="opcion-preview-item">
-                      <input [type]="esMultiple() ? 'checkbox' : 'radio'" disabled />
-                      <span>{{ op }}</span>
-                    </label>
+              @if (esRanking()) {
+                <div class="opciones-preview">
+                  @for (op of opciones; track trackByIndex($index); let i = $index) {
+                    @if (op.trim()) {
+                      <div class="ranking-preview-item">
+                        <span class="ranking-numero">{{ i + 1 }}</span>
+                        <span>{{ op }}</span>
+                      </div>
+                    }
                   }
-                }
-              </div>
+                </div>
+              } @else {
+                <div class="opciones-preview">
+                  @for (op of opciones; track trackByIndex($index)) {
+                    @if (op.trim()) {
+                      <label class="opcion-preview-item">
+                        <input [type]="esMultiple() ? 'checkbox' : 'radio'" disabled />
+                        <span>{{ op }}</span>
+                      </label>
+                    }
+                  }
+                </div>
+              }
             }
           </div>
         </div>
