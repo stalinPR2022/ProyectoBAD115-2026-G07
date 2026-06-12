@@ -8,3 +8,14 @@ html, body {
   height: 100%;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
+
+:root {
+  --brand-primary:        #2B579A;
+  --brand-primary-hover:  #1E3F74;
+  --brand-primary-light:  #E8EEF7;
+  --brand-primary-border: #9AB0D4;
+  --brand-primary-shadow: rgba(43, 87, 154, 0.12);
+  --brand-accent:         #00A99D;
+  --brand-sidebar:        #1A3665;
+  --brand-sidebar-active: rgba(43, 87, 154, 0.40);
+}

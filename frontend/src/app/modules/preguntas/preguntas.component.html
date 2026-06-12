@@ -50,13 +50,27 @@
               <input type="text" placeholder="Respuesta del encuestado..." disabled class="preview-input" />
             }
             @if (p.tipoPregunta === 'CERRADA') {
-              @if (p.tipoPreguntaCerrada === 'RANKING') {
+              @if (p.tipoPreguntaCerrada === 'ESCALA' && p.opciones && p.opciones.length >= 2) {
+                <div class="escala-guardada-preview">
+                  <span class="escala-rango-label">Rango numérico: {{ p.opciones[0].textoOpcion }} – {{ p.opciones[1].textoOpcion }}</span>
+                  <input type="range" [min]="p.opciones[0].textoOpcion" [max]="p.opciones[1].textoOpcion" disabled class="preview-range" />
+                </div>
+              } @else if (p.tipoPreguntaCerrada === 'RANKING') {
                 <div class="opciones-preview">
                   @for (op of p.opciones; track op.idOpcionRespuesta; let i = $index) {
                     <div class="ranking-preview-item">
                       <span class="ranking-numero">{{ i + 1 }}</span>
                       <span>{{ op.textoOpcion }}</span>
                     </div>
+                  }
+                </div>
+              } @else if (p.tipoPreguntaCerrada === 'LIKERT') {
+                <div class="likert-preview">
+                  @for (op of p.opciones; track op.idOpcionRespuesta) {
+                    <label class="likert-item">
+                      <input type="radio" disabled />
+                      <span class="likert-label">{{ op.textoOpcion }}</span>
+                    </label>
                   }
                 </div>
               } @else {
@@ -152,9 +166,38 @@
                   Ranking
                   <span class="subtipo-hint">Ordenar ítems</span>
                 </button>
+                <button type="button" class="tipo-btn" [class.active]="esEscala()"
+                  (click)="seleccionarTipoCerrada('ESCALA')">
+                  Escala
+                  <span class="subtipo-hint">Numérica/Likert</span>
+                </button>
               </div>
             </div>
           }
+        }
+
+        <!-- Sub-selector escala -->
+        @if (esEscala() && tipoPrincipal === 'CERRADA') {
+          <div class="form-group">
+            <label>Tipo de escala</label>
+            <div class="tipo-selector">
+              <button type="button" class="tipo-btn" [class.active]="tipoCerrada === 'ESCALA'"
+                (click)="seleccionarTipoCerrada('ESCALA')">
+                Numérica
+                <span class="subtipo-hint">Rango min-max</span>
+              </button>
+              <button type="button" class="tipo-btn" [class.active]="tipoCerrada === 'LIKERT'"
+                (click)="seleccionarTipoCerrada('LIKERT')">
+                Likert
+                <span class="subtipo-hint">Nivel de acuerdo</span>
+              </button>
+              <button type="button" class="tipo-btn" [class.active]="tipoCerrada === 'NOMINAL'"
+                (click)="seleccionarTipoCerrada('NOMINAL')">
+                Nominal
+                <span class="subtipo-hint">Etiquetas texto</span>
+              </button>
+            </div>
+          </div>
         }
 
         <!-- Enunciado -->
@@ -167,26 +210,46 @@
           }
         </div>
 
-        <!-- Opciones (preguntas cerradas) -->
+        <!-- Opciones -->
         @if (tipoPrincipal === 'CERRADA') {
-          <div class="form-group">
-            <label>Opciones de respuesta</label>
-            <div class="opciones-editor">
-              @for (op of opciones; track trackByIndex($index); let i = $index) {
-                <div class="opcion-row">
-                  <span class="opcion-radio-mock"></span>
-                  <input type="text" [(ngModel)]="opciones[i]" [ngModelOptions]="{standalone: true}"
-                    placeholder="Opción {{ i + 1 }}" class="opcion-input" [readonly]="tipoCerrada === 'DICOTOMICA'" />
-                  @if (tipoCerrada !== 'DICOTOMICA' && opciones.length > 2) {
-                    <button type="button" class="btn-remove-opcion" (click)="eliminarOpcion(i)">✕</button>
-                  }
-                </div>
-              }
-              @if (tipoCerrada !== 'DICOTOMICA') {
-                <button type="button" class="btn-add-opcion" (click)="agregarOpcion()">+ Agregar ítem</button>
-              }
+
+          <!-- Escala numérica: min y max -->
+          @if (esEscalaNum()) {
+            <div class="form-row">
+              <div class="form-group">
+                <label>Valor mínimo</label>
+                <input type="number" [(ngModel)]="opciones[0]" [ngModelOptions]="{standalone: true}" placeholder="1" class="opcion-input" />
+              </div>
+              <div class="form-group">
+                <label>Valor máximo</label>
+                <input type="number" [(ngModel)]="opciones[1]" [ngModelOptions]="{standalone: true}" placeholder="10" class="opcion-input" />
+              </div>
             </div>
-          </div>
+          }
+
+          <!-- Likert / Nominal / otras cerradas -->
+          @if (!esEscalaNum()) {
+            <div class="form-group">
+              <label>{{ esLikert() ? 'Etiquetas de la escala' : esNominal() ? 'Niveles de la escala' : 'Opciones de respuesta' }}</label>
+              <div class="opciones-editor">
+                @for (op of opciones; track trackByIndex($index); let i = $index) {
+                  <div class="opcion-row">
+                    @if (!esEscala()) { <span class="opcion-radio-mock"></span> }
+                    @if (esEscala()) { <span class="ranking-numero">{{ i + 1 }}</span> }
+                    <input type="text" [(ngModel)]="opciones[i]" [ngModelOptions]="{standalone: true}"
+                      placeholder="{{ esLikert() ? 'Etiqueta ' + (i+1) : 'Opción ' + (i+1) }}"
+                      class="opcion-input" [readonly]="tipoCerrada === 'DICOTOMICA'" />
+                    @if (tipoCerrada !== 'DICOTOMICA' && opciones.length > 2) {
+                      <button type="button" class="btn-remove-opcion" (click)="eliminarOpcion(i)">✕</button>
+                    }
+                  </div>
+                }
+                @if (tipoCerrada !== 'DICOTOMICA') {
+                  <button type="button" class="btn-add-opcion" (click)="agregarOpcion()">+ Agregar ítem</button>
+                }
+              </div>
+            </div>
+          }
         }
 
         <!-- Obligatoria -->
@@ -211,7 +274,42 @@
               }
             }
             @if (tipoPrincipal === 'CERRADA') {
-              @if (esRanking()) {
+              @if (esEscalaNum()) {
+                <div class="escala-num-preview">
+                  <div class="escala-range-labels">
+                    <span>{{ opciones[0] || '1' }}</span>
+                    <span>{{ opciones[1] || '10' }}</span>
+                  </div>
+                  <input type="range" [min]="minEscala" [max]="maxEscala" disabled class="preview-range" />
+                  <div class="escala-ticks">
+                    @for (n of escalaRange; track n) {
+                      <span>{{ n }}</span>
+                    }
+                  </div>
+                </div>
+              } @else if (esLikert()) {
+                <div class="likert-preview">
+                  @for (op of opciones; track trackByIndex($index); let i = $index) {
+                    @if (op.trim()) {
+                      <label class="likert-item">
+                        <input type="radio" disabled />
+                        <span class="likert-label">{{ op }}</span>
+                      </label>
+                    }
+                  }
+                </div>
+              } @else if (esNominal()) {
+                <div class="opciones-preview">
+                  @for (op of opciones; track trackByIndex($index)) {
+                    @if (op.trim()) {
+                      <label class="opcion-preview-item">
+                        <input type="radio" disabled />
+                        <span>{{ op }}</span>
+                      </label>
+                    }
+                  }
+                </div>
+              } @else if (esRanking()) {
                 <div class="opciones-preview">
                   @for (op of opciones; track trackByIndex($index); let i = $index) {
                     @if (op.trim()) {

@@ -1,55 +1,134 @@
-<div class="login-wrapper">
-  <div class="login-card">
+<div class="login-page">
 
-    <div class="login-header">
-      <img src="assets/images/logo_sondevia_light.png" alt="Sondevia" class="login-logo" />
-      <p class="login-subtitle">Inicia sesión para continuar</p>
+  <!-- Panel izquierdo: marca -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <img src="assets/images/logo_sondevia_sidebar.png" alt="Sondevia" class="brand-logo" />
+      <h1 class="brand-name">Sondevia</h1>
+      <p class="brand-desc">
+        Plataforma profesional para crear, publicar y analizar encuestas con total precisión.
+      </p>
+      <ul class="brand-features">
+        <li>
+          <span class="feature-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          Múltiples tipos de preguntas
+        </li>
+        <li>
+          <span class="feature-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          Resultados y estadísticas en tiempo real
+        </li>
+        <li>
+          <span class="feature-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          Gestión de roles y accesos
+        </li>
+      </ul>
     </div>
-
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
-
-      <div class="field-group">
-        <label for="email">Correo electrónico</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="correo@ejemplo.com"
-          [class.input-error]="form.get('email')?.invalid && form.get('email')?.touched"
-          autocomplete="email"
-        />
-        @if (form.get('email')?.invalid && form.get('email')?.touched) {
-          <span class="field-error">Ingresa un correo válido.</span>
-        }
-      </div>
-
-      <div class="field-group">
-        <label for="contrasenia">Contraseña</label>
-        <input
-          id="contrasenia"
-          type="password"
-          formControlName="contrasenia"
-          placeholder="••••••••"
-          [class.input-error]="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched"
-          autocomplete="current-password"
-        />
-        @if (form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched) {
-          <span class="field-error">La contraseña es obligatoria.</span>
-        }
-      </div>
-
-      @if (errorMessage) {
-        <div class="alert-error">{{ errorMessage }}</div>
-      }
-
-      <button type="submit" class="btn-login" [disabled]="loading">
-        @if (loading) {
-          <span class="spinner"></span> Ingresando...
-        } @else {
-          Iniciar sesión
-        }
-      </button>
-
-    </form>
+    <div class="brand-deco">
+      <div class="deco-circle deco-c1"></div>
+      <div class="deco-circle deco-c2"></div>
+      <div class="deco-circle deco-c3"></div>
+    </div>
   </div>
+
+  <!-- Panel derecho: formulario -->
+  <div class="form-panel">
+    <div class="form-container">
+
+      <div class="form-header">
+        <h2>Iniciar sesión</h2>
+        <p>Ingresa tus credenciales para acceder al sistema</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="login-form">
+
+        <div class="field-group">
+          <label for="email">Correo electrónico</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </span>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="correo@ejemplo.com"
+              [class.input-error]="form.get('email')?.invalid && form.get('email')?.touched"
+              autocomplete="email"
+            />
+          </div>
+          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <span class="field-error">Ingresa un correo válido.</span>
+          }
+        </div>
+
+        <div class="field-group">
+          <label for="contrasenia">Contraseña</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input
+              id="contrasenia"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="contrasenia"
+              placeholder="••••••••"
+              [class.input-error]="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched"
+              autocomplete="current-password"
+            />
+            <button type="button" class="btn-toggle-pass" (click)="togglePassword()" tabindex="-1">
+              @if (showPassword) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched) {
+            <span class="field-error">La contraseña es obligatoria.</span>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <div class="alert-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ errorMessage }}
+          </div>
+        }
+
+        <button type="submit" class="btn-login" [disabled]="loading">
+          @if (loading) {
+            <span class="spinner"></span>
+            Verificando...
+          } @else {
+            Iniciar sesión
+          }
+        </button>
+
+      </form>
+
+      <p class="form-footer">Sistema de gestión de encuestas &copy; 2026</p>
+    </div>
+  </div>
+
 </div>

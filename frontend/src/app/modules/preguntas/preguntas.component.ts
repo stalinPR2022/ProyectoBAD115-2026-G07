@@ -7,7 +7,7 @@ import { EncuestaService, Encuesta } from '../../core/services/encuesta.service'
 
 type TipoPrincipal = 'ABIERTA' | 'CERRADA';
 type TipoTexto = 'corta' | 'larga';
-type TipoCerrada = 'DICOTOMICA' | 'ELECCION_UNICA' | 'ELECCION_MULTIPLE' | 'RANKING';
+type TipoCerrada = 'DICOTOMICA' | 'ELECCION_UNICA' | 'ELECCION_MULTIPLE' | 'RANKING' | 'ESCALA' | 'LIKERT' | 'NOMINAL';
 
 @Component({
   selector: 'app-preguntas',
@@ -100,15 +100,29 @@ export class PreguntasComponent implements OnInit {
 
   seleccionarTipoCerrada(tipo: TipoCerrada): void {
     this.tipoCerrada = tipo;
-    if (tipo === 'DICOTOMICA') {
-      this.opciones = ['Sí', 'No'];
-    } else if (!this.editando) {
-      this.opciones = ['', ''];
+    if (!this.editando) {
+      if (tipo === 'DICOTOMICA') this.opciones = ['Sí', 'No'];
+      else if (tipo === 'ESCALA') this.opciones = ['1', '10'];
+      else if (tipo === 'LIKERT') this.opciones = ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Totalmente de acuerdo'];
+      else if (tipo === 'NOMINAL') this.opciones = ['Nunca', 'A veces', 'Siempre'];
+      else this.opciones = ['', ''];
     }
   }
 
   esMultiple(): boolean { return this.tipoCerrada === 'ELECCION_MULTIPLE'; }
   esRanking(): boolean { return this.tipoCerrada === 'RANKING'; }
+  esEscala(): boolean { return ['ESCALA', 'LIKERT', 'NOMINAL'].includes(this.tipoCerrada); }
+  esEscalaNum(): boolean { return this.tipoCerrada === 'ESCALA'; }
+  esLikert(): boolean { return this.tipoCerrada === 'LIKERT'; }
+  esNominal(): boolean { return this.tipoCerrada === 'NOMINAL'; }
+
+  get minEscala(): number { return this.opciones[0] ? parseInt(this.opciones[0]) || 1 : 1; }
+  get maxEscala(): number { return this.opciones[1] ? parseInt(this.opciones[1]) || 5 : 5; }
+  get escalaRange(): number[] {
+    const min = this.minEscala;
+    const max = this.maxEscala;
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  }
 
   agregarOpcion(): void {
     this.opciones.push('');
@@ -132,8 +146,11 @@ export class PreguntasComponent implements OnInit {
     }
 
     const tipoCerradaBackend =
-      this.tipoCerrada === 'DICOTOMICA' || this.tipoCerrada === 'ELECCION_UNICA' ? 'ELECCION_UNICA' :
-      this.tipoCerrada === 'ELECCION_MULTIPLE' ? 'ELECCION_MULTIPLE' : 'RANKING';
+      (this.tipoCerrada === 'DICOTOMICA' || this.tipoCerrada === 'ELECCION_UNICA') ? 'ELECCION_UNICA' :
+      this.tipoCerrada === 'ELECCION_MULTIPLE' ? 'ELECCION_MULTIPLE' :
+      this.tipoCerrada === 'RANKING' ? 'RANKING' :
+      this.tipoCerrada === 'LIKERT' ? 'LIKERT' :
+      this.tipoCerrada === 'NOMINAL' ? 'NOMINAL' : 'ESCALA';
 
     const data: PreguntaRequest = {
       descripcionPregunta: this.form.value.descripcionPregunta,
@@ -175,8 +192,11 @@ export class PreguntasComponent implements OnInit {
   labelTipo(p: Pregunta): string {
     if (p.tipoPregunta === 'ABIERTA') return 'Abierta';
     if (p.tipoPregunta === 'CERRADA') {
-      if (p.tipoPreguntaCerrada === 'ELECCION_MULTIPLE') return 'Elección Múltiple';
-      if (p.tipoPreguntaCerrada === 'RANKING') return 'Ranking';
+      const map: Record<string, string> = {
+        ELECCION_MULTIPLE: 'Elección Múltiple', RANKING: 'Ranking',
+        ESCALA: 'Escala Numérica', LIKERT: 'Escala Likert', NOMINAL: 'Escala Nominal'
+      };
+      if (p.tipoPreguntaCerrada && map[p.tipoPreguntaCerrada]) return map[p.tipoPreguntaCerrada];
       return p.opciones?.length === 2 ? 'Dicotómica' : 'Politómica';
     }
     return p.tipoPregunta;
@@ -185,10 +205,19 @@ export class PreguntasComponent implements OnInit {
   colorTipo(p: Pregunta): string {
     if (p.tipoPregunta === 'ABIERTA') return 'tipo-abierta';
     if (p.tipoPregunta === 'CERRADA') {
-      if (p.tipoPreguntaCerrada === 'ELECCION_MULTIPLE') return 'tipo-multiple';
-      if (p.tipoPreguntaCerrada === 'RANKING') return 'tipo-ranking';
+      const map: Record<string, string> = {
+        ELECCION_MULTIPLE: 'tipo-multiple', RANKING: 'tipo-ranking',
+        ESCALA: 'tipo-escala', LIKERT: 'tipo-escala', NOMINAL: 'tipo-escala'
+      };
+      if (p.tipoPreguntaCerrada && map[p.tipoPreguntaCerrada]) return map[p.tipoPreguntaCerrada];
       return p.opciones?.length === 2 ? 'tipo-dicotomica' : 'tipo-politomica';
     }
+    return '';
+  }
+
+  labelEscala(p: Pregunta): string {
+    if (p.tipoPreguntaCerrada === 'ESCALA' && p.opciones?.length >= 2)
+      return `Rango: ${p.opciones[0].textoOpcion} – ${p.opciones[1].textoOpcion}`;
     return '';
   }
 }

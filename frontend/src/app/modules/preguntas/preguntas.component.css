@@ -19,16 +19,16 @@
 .page-subtitle { font-size: 0.875rem; color: #6b7280; display: flex; align-items: center; gap: 8px; }
 
 .estado-badge { padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-.estado-1 { background: #eff6ff; color: #3b82f6; }
+.estado-1 { background: var(--brand-primary-light); color: var(--brand-primary); }
 .estado-2 { background: #f0fdf4; color: #16a34a; }
 .estado-3 { background: #f9fafb; color: #6b7280; }
 
 .btn-primary {
-  background: #4f46e5; color: #fff; border: none;
+  background: var(--brand-primary); color: #fff; border: none;
   padding: 10px 18px; border-radius: 8px; font-size: 0.875rem;
   font-weight: 600; cursor: pointer;
 }
-.btn-primary:hover { background: #4338ca; }
+.btn-primary:hover { background: var(--brand-primary-hover); }
 
 .btn-secondary {
   background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;
@@ -57,7 +57,7 @@
 
 .pregunta-numero {
   min-width: 28px; height: 28px; border-radius: 50%;
-  background: #eff6ff; color: #3b82f6;
+  background: var(--brand-primary-light); color: var(--brand-primary);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
 }
@@ -132,7 +132,7 @@ textarea, input[type="text"] {
   padding: 9px 12px; font-size: 0.875rem; width: 100%;
   font-family: inherit; transition: border-color 0.2s;
 }
-textarea:focus, input[type="text"]:focus { outline: none; border-color: #4f46e5; }
+textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--brand-primary); }
 textarea { resize: vertical; }
 
 .field-error { font-size: 0.78rem; color: #dc2626; }
@@ -146,7 +146,7 @@ textarea { resize: vertical; }
   font-weight: 500; cursor: pointer; transition: all 0.2s;
 }
 .tipo-btn svg { width: 16px; height: 16px; }
-.tipo-btn.active { border-color: #4f46e5; color: #4f46e5; background: #eff6ff; }
+.tipo-btn.active { border-color: var(--brand-primary); color: var(--brand-primary); background: #eff6ff; }
 
 /* Checkbox */
 .form-check {
@@ -154,7 +154,7 @@ textarea { resize: vertical; }
 }
 .form-check input[type="checkbox"] {
   width: 16px; height: 16px; cursor: pointer;
-  accent-color: #4f46e5;
+  accent-color: var(--brand-primary);
 }
 .form-check label { font-size: 0.875rem; font-weight: 500; color: #374151; cursor: pointer; }
 
@@ -187,7 +187,7 @@ textarea { resize: vertical; }
   flex: 1; border: 1px solid #d1d5db; border-radius: 6px;
   padding: 7px 10px; font-size: 0.875rem;
 }
-.opcion-input:focus { outline: none; border-color: #4f46e5; }
+.opcion-input:focus { outline: none; border-color: var(--brand-primary); }
 .opcion-input[readonly] { background: #f9fafb; color: #374151; }
 
 .btn-remove-opcion {
@@ -201,7 +201,7 @@ textarea { resize: vertical; }
   border-radius: 6px; padding: 7px 12px; font-size: 0.83rem;
   color: #6b7280; cursor: pointer; text-align: left;
 }
-.btn-add-opcion:hover { border-color: #4f46e5; color: #4f46e5; }
+.btn-add-opcion:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
 
 /* Opciones preview */
 .opciones-preview { display: flex; flex-direction: column; gap: 6px; }
@@ -232,6 +232,22 @@ textarea { resize: vertical; }
 }
 
 .tipo-btn { flex-direction: column; }
+
+/* Escala numérica */
+.escala-num-preview { display: flex; flex-direction: column; gap: 4px; }
+.escala-range-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #6b7280; }
+.preview-range { width: 100%; accent-color: var(--brand-primary); cursor: not-allowed; }
+.escala-ticks { display: flex; justify-content: space-between; font-size: 0.72rem; color: #9ca3af; }
+.escala-guardada-preview { display: flex; flex-direction: column; gap: 4px; }
+.escala-rango-label { font-size: 0.78rem; color: #6b7280; }
+
+/* Likert */
+.likert-preview { display: flex; flex-wrap: wrap; gap: 6px; }
+.likert-item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 60px; }
+.likert-item input { cursor: default; }
+.likert-label { font-size: 0.72rem; color: #6b7280; text-align: center; }
+
+.tipo-escala { background: var(--brand-primary-light); color: var(--brand-primary); }
 
 .modal-footer {
   display: flex; justify-content: flex-end; gap: 10px;

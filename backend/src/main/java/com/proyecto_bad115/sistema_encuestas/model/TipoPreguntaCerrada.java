@@ -1,8 +1,10 @@
 package com.proyecto_bad115.sistema_encuestas.model;
 
 public enum TipoPreguntaCerrada {
-    ESCALA,
-    RANKING,
+    ELECCION_UNICA,
     ELECCION_MULTIPLE,
-    ELECCION_UNICA
+    RANKING,
+    ESCALA,
+    LIKERT,
+    NOMINAL
 }

@@ -117,13 +117,16 @@ public class PreguntaService {
         if (dto.getTipoPreguntaCerrada() == null || dto.getTipoPreguntaCerrada().isBlank()) {
             throw new IllegalArgumentException("Debe especificar el tipo de pregunta cerrada");
         }
-        if (dto.getOpciones() == null || dto.getOpciones().size() < 2) {
-            throw new IllegalArgumentException("Una pregunta cerrada debe tener al menos 2 opciones");
+        if (dto.getOpciones() == null || dto.getOpciones().stream().filter(o -> !o.isBlank()).count() < 2) {
+            throw new IllegalArgumentException("La pregunta debe tener al menos 2 opciones o valores");
         }
-        if (dto.getTipoPreguntaCerrada().equals("ELECCION_UNICA")) {
-            long opciones = dto.getOpciones().stream().filter(o -> !o.isBlank()).count();
-            if (opciones < 2) {
-                throw new IllegalArgumentException("La pregunta debe tener al menos 2 opciones");
+        if (dto.getTipoPreguntaCerrada().equals("ESCALA")) {
+            try {
+                int min = Integer.parseInt(dto.getOpciones().get(0).trim());
+                int max = Integer.parseInt(dto.getOpciones().get(1).trim());
+                if (min >= max) throw new IllegalArgumentException("El valor mínimo debe ser menor al máximo");
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Los valores de la escala numérica deben ser números enteros");
             }
         }
     }
