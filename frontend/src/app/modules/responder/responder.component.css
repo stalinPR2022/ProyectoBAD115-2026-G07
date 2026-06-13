@@ -114,6 +114,36 @@
 }
 .estado-centro h2 { font-size: 1.3rem; font-weight: 700; color: #111827; }
 .estado-msg { font-size: 0.95rem; color: #6b7280; line-height: 1.55; max-width: 420px; }
+.estado-nota { font-size: 0.82rem; color: #9ca3af; }
+
+/* Número de registro (CU13) */
+.registro-box {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary-border);
+  border-radius: 12px; padding: 16px 32px; margin: 4px 0;
+}
+.registro-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--brand-primary);
+}
+.registro-num { font-size: 1.8rem; font-weight: 800; color: var(--brand-primary); line-height: 1.1; }
+.registro-fecha { font-size: 0.8rem; color: #6b7280; }
+
+/* Diálogo de confirmación (CU13) */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+.confirm-dialog {
+  background: #fff; border-radius: 14px;
+  padding: 28px 28px 22px; max-width: 400px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.confirm-dialog h3 { font-size: 1.15rem; font-weight: 700; color: #111827; margin-bottom: 8px; }
+.confirm-dialog p { font-size: 0.9rem; color: #6b7280; line-height: 1.5; margin-bottom: 22px; }
+.confirm-acciones { display: flex; justify-content: flex-end; gap: 10px; }
 
 .icono-error {
   width: 56px; height: 56px; border-radius: 50%;

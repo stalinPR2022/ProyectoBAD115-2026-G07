@@ -25,6 +25,26 @@ export interface ParticipanteResponse {
   nombre: string;
 }
 
+export interface DetalleEnvio {
+  idPregunta: number;
+  texto: string;
+  idOpcion: number | null;
+  idOpciones: number[];
+  valor: number | null;
+  ranking: number[];
+  otrosTexto: string;
+}
+
+export interface RespuestaEnvio {
+  email: string;
+  respuestas: DetalleEnvio[];
+}
+
+export interface RespuestaConfirmacion {
+  numeroRegistro: number;
+  fechaRespuesta: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PublicoService {
   private api = 'http://localhost:8080/publico';
@@ -41,5 +61,9 @@ export class PublicoService {
 
   participar(token: string, data: ParticipanteRequest): Observable<ParticipanteResponse> {
     return this.http.post<ParticipanteResponse>(`${this.api}/encuestas/${token}/participar`, data);
+  }
+
+  enviarRespuestas(token: string, data: RespuestaEnvio): Observable<RespuestaConfirmacion> {
+    return this.http.post<RespuestaConfirmacion>(`${this.api}/encuestas/${token}/responder`, data);
   }
 }

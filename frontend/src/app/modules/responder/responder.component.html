@@ -232,5 +232,40 @@
       </div>
     }
 
+    @if (paso === 'fin') {
+      <!-- Agradecimiento + número de registro (CU13) -->
+      <div class="estado-centro">
+        <div class="icono-ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </div>
+        <h2>¡Gracias por participar{{ participante ? ', ' + participante.nombre : '' }}!</h2>
+        <p class="estado-msg">Tus respuestas se registraron correctamente.</p>
+        @if (confirmacion) {
+          <div class="registro-box">
+            <span class="registro-label">Número de registro</span>
+            <span class="registro-num">#{{ confirmacion.numeroRegistro }}</span>
+            <span class="registro-fecha">{{ confirmacion.fechaRespuesta | date:'dd/MM/yyyy' }}</span>
+          </div>
+        }
+        <p class="estado-nota">Ya puedes cerrar esta ventana.</p>
+      </div>
+    }
+
   </div>
 </div>
+
+<!-- Confirmación de envío (CU13) -->
+@if (confirmando) {
+  <div class="confirm-overlay" (click)="cancelarEnvio()">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <h3>¿Enviar tus respuestas?</h3>
+      <p>Una vez enviadas no podrás modificarlas. ¿Deseas continuar?</p>
+      <div class="confirm-acciones">
+        <button type="button" class="btn-nav-sec" (click)="cancelarEnvio()">Cancelar</button>
+        <button type="button" class="btn-nav-pri" (click)="confirmarEnvio()">Sí, enviar</button>
+      </div>
+    </div>
+  </div>
+}

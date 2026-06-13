@@ -2,10 +2,10 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { PublicoService, EncuestaPublica, ParticipanteResponse } from '../../core/services/publico.service';
+import { PublicoService, EncuestaPublica, ParticipanteResponse, RespuestaConfirmacion } from '../../core/services/publico.service';
 import { Pregunta, Opcion } from '../../core/services/pregunta.service';
 
-type Paso = 'cargando' | 'error' | 'datos' | 'preguntas' | 'resumen';
+type Paso = 'cargando' | 'error' | 'datos' | 'preguntas' | 'resumen' | 'fin';
 
 interface RespuestaItem {
   idPregunta: number;
@@ -46,6 +46,10 @@ export class ResponderComponent implements OnInit {
   indiceActual = 0;
   respuestas: Record<number, RespuestaItem> = {};
   errorPregunta = '';
+
+  // CU13 - Envío
+  confirmando = false;
+  confirmacion: RespuestaConfirmacion | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -294,9 +298,52 @@ export class ResponderComponent implements OnInit {
     return o?.esMixta ? `Otros: ${r.otrosTexto}` : (o?.textoOpcion ?? '(sin responder)');
   }
 
-  // Placeholder de envío — se implementa en CU13 (Etapa 12)
+  // ── CU13 - Envío final ────────────────────────────────
   enviar(): void {
     this.errorForm = '';
+    this.confirmando = true;
+  }
+
+  cancelarEnvio(): void {
+    this.confirmando = false;
+  }
+
+  confirmarEnvio(): void {
+    if (this.enviando) return;
+    this.confirmando = false;
+    this.enviando = true;
+    this.errorForm = '';
+
+    const payload = {
+      email: this.participante?.email ?? this.form.value.email,
+      respuestas: this.preguntas.map(p => {
+        const r = this.resp(p);
+        return {
+          idPregunta: p.idPregunta,
+          texto: r.texto,
+          idOpcion: r.idOpcion,
+          idOpciones: r.idOpciones,
+          valor: r.valor,
+          ranking: r.ranking,
+          otrosTexto: r.otrosTexto
+        };
+      })
+    };
+
+    this.publicoService.enviarRespuestas(this.token, payload).subscribe({
+      next: (res) => {
+        this.confirmacion = res;
+        this.enviando = false;
+        this.paso = 'fin';
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        // Las respuestas se conservan en el cliente; el encuestado puede reintentar
+        this.enviando = false;
+        this.errorForm = err.error?.mensaje || 'No se pudieron enviar tus respuestas. Inténtalo de nuevo.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   get f() { return this.form.controls; }
