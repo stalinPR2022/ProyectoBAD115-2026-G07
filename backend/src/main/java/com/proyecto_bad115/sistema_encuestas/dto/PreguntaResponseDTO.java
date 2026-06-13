@@ -14,6 +14,9 @@ public class PreguntaResponseDTO {
     private String tipoPregunta;
     private String tipoPreguntaCerrada;
     private Boolean esMixta;
+    private Integer minCaracteres;
+    private Integer maxCaracteres;
+    private Integer maxSelecciones;
     private Integer idEncuesta;
     private List<OpcionResponseDTO> opciones;
 }

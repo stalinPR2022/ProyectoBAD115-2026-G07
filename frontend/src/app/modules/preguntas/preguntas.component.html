@@ -45,6 +45,9 @@
               @if (p.obligatoriaPregunta) {
                 <span class="obligatoria-badge">Obligatoria</span>
               }
+              @if (labelValidacion(p)) {
+                <span class="validacion-badge">{{ labelValidacion(p) }}</span>
+              }
             </div>
             <p class="pregunta-texto">{{ p.descripcionPregunta }}</p>
 
@@ -216,6 +219,19 @@
           }
         </div>
 
+        <!-- Validación abierta: límite de caracteres (CU07) -->
+        @if (tipoPrincipal === 'ABIERTA') {
+          <div class="form-group">
+            <label>Límite de caracteres <span class="subtipo-hint">(opcional)</span></label>
+            <div class="form-row">
+              <input type="number" min="0" [(ngModel)]="minCaracteres" [ngModelOptions]="{standalone: true}"
+                placeholder="Mínimo" class="opcion-input" />
+              <input type="number" min="1" [(ngModel)]="maxCaracteres" [ngModelOptions]="{standalone: true}"
+                placeholder="Máximo" class="opcion-input" />
+            </div>
+          </div>
+        }
+
         <!-- Opciones -->
         @if (tipoPrincipal === 'CERRADA') {
 
@@ -264,6 +280,15 @@
               <label for="esMixta">Permitir opción <strong>"Otros"</strong> con texto libre</label>
             </div>
           }
+
+          <!-- Máximo de selecciones (CU07, solo múltiple) -->
+          @if (esMultiple()) {
+            <div class="form-group">
+              <label>Máximo de selecciones permitidas <span class="subtipo-hint">(opcional, sin límite si se deja vacío)</span></label>
+              <input type="number" min="1" [(ngModel)]="maxSelecciones" [ngModelOptions]="{standalone: true}"
+                placeholder="Sin límite" class="opcion-input" />
+            </div>
+          }
         }
 
         <!-- Obligatoria -->
@@ -285,6 +310,13 @@
                 <input type="text" placeholder="Respuesta corta..." disabled class="preview-input" />
               } @else {
                 <textarea rows="3" placeholder="Respuesta larga..." disabled class="preview-textarea"></textarea>
+              }
+              @if (minCaracteres != null || maxCaracteres != null) {
+                <span class="validacion-hint">
+                  @if (minCaracteres != null && maxCaracteres != null) { Entre {{ minCaracteres }} y {{ maxCaracteres }} caracteres }
+                  @else if (maxCaracteres != null) { Máximo {{ maxCaracteres }} caracteres }
+                  @else { Mínimo {{ minCaracteres }} caracteres }
+                </span>
               }
             }
             @if (tipoPrincipal === 'CERRADA') {
@@ -350,6 +382,9 @@
                       <span>Otros:</span>
                       <input type="text" class="otros-input" placeholder="Especifique..." disabled />
                     </label>
+                  }
+                  @if (esMultiple() && maxSelecciones != null) {
+                    <span class="validacion-hint">Selecciona hasta {{ maxSelecciones }} opció{{ maxSelecciones === 1 ? 'n' : 'nes' }}</span>
                   }
                 </div>
               }

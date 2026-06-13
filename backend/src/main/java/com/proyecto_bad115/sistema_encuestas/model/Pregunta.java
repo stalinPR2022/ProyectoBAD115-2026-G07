@@ -31,6 +31,16 @@ public class Pregunta {
 
     private Boolean esMixta;
 
+    // CU07 - Criterios de validación (nullable; solo aplican según el tipo)
+    @Column(name = "min_caracteres")
+    private Integer minCaracteres;
+
+    @Column(name = "max_caracteres")
+    private Integer maxCaracteres;
+
+    @Column(name = "max_selecciones")
+    private Integer maxSelecciones;
+
     @ManyToOne
     @JoinColumn(name = "id_encuesta", nullable = false)
     private Encuesta encuesta;

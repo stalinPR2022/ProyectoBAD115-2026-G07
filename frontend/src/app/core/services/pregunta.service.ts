@@ -16,6 +16,9 @@ export interface Pregunta {
   tipoPregunta: string;
   tipoPreguntaCerrada: string | null;
   esMixta: boolean;
+  minCaracteres: number | null;
+  maxCaracteres: number | null;
+  maxSelecciones: number | null;
   idEncuesta: number;
   opciones: Opcion[];
 }
@@ -26,6 +29,9 @@ export interface PreguntaRequest {
   tipoPregunta: string;
   tipoPreguntaCerrada?: string;
   esMixta?: boolean;
+  minCaracteres?: number | null;
+  maxCaracteres?: number | null;
+  maxSelecciones?: number | null;
   opciones?: string[];
 }
 

@@ -83,6 +83,17 @@
   font-size: 0.72rem; font-weight: 600;
 }
 
+.validacion-badge {
+  background: #f1f5f9; color: #475569;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 600;
+}
+
+.validacion-hint {
+  display: block; margin-top: 6px;
+  font-size: 0.75rem; color: #6b7280; font-style: italic;
+}
+
 .pregunta-texto { font-size: 0.925rem; font-weight: 500; color: #111827; }
 
 .preview-input {

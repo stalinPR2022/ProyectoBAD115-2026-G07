@@ -24,5 +24,10 @@ public class PreguntaRequestDTO {
 
     private Boolean esMixta;
 
+    // CU07 - Criterios de validación
+    private Integer minCaracteres;
+    private Integer maxCaracteres;
+    private Integer maxSelecciones;
+
     private List<String> opciones;
 }

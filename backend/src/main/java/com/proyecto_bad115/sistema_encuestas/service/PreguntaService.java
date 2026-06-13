@@ -62,6 +62,8 @@ public class PreguntaService {
             pregunta.setTipoPreguntaCerrada(TipoPreguntaCerrada.valueOf(dto.getTipoPreguntaCerrada()));
         }
 
+        aplicarValidaciones(pregunta, dto, tipo, esMixta);
+
         Pregunta guardada = preguntaRepository.save(pregunta);
         guardarOpciones(guardada, dto.getOpciones(), esMixta);
 
@@ -87,6 +89,8 @@ public class PreguntaService {
         pregunta.setDescripcionPregunta(dto.getDescripcionPregunta());
         pregunta.setObligatoriaPregunta(dto.getObligatoriaPregunta());
         pregunta.setEsMixta(esMixta);
+
+        aplicarValidaciones(pregunta, dto, pregunta.getTipoPregunta(), esMixta);
 
         opcionRespuestaRepository.deleteByPreguntaIdPregunta(idPregunta);
         guardarOpciones(pregunta, dto.getOpciones(), esMixta);
@@ -146,6 +150,50 @@ public class PreguntaService {
         }
     }
 
+    /**
+     * CU07 - Aplica y valida los criterios de validación de la pregunta.
+     * ABIERTA: mín/máx de caracteres. ELECCION_MULTIPLE: máx de selecciones.
+     * Limpia los campos que no apliquen al tipo.
+     */
+    private void aplicarValidaciones(Pregunta pregunta, PreguntaRequestDTO dto,
+                                     TipoPregunta tipo, boolean esMixta) {
+        if (tipo == TipoPregunta.ABIERTA) {
+            Integer min = dto.getMinCaracteres();
+            Integer max = dto.getMaxCaracteres();
+            if (min != null && min < 0) {
+                throw new IllegalArgumentException("El mínimo de caracteres no puede ser negativo");
+            }
+            if (max != null && max < 1) {
+                throw new IllegalArgumentException("El máximo de caracteres debe ser mayor a 0");
+            }
+            if (min != null && max != null && min > max) {
+                throw new IllegalArgumentException("El valor mínimo no puede ser mayor al máximo");
+            }
+            pregunta.setMinCaracteres(min);
+            pregunta.setMaxCaracteres(max);
+            pregunta.setMaxSelecciones(null);
+        } else {
+            // CERRADA: máx de selecciones solo para elección múltiple
+            if ("ELECCION_MULTIPLE".equals(dto.getTipoPreguntaCerrada()) && dto.getMaxSelecciones() != null) {
+                int maxSel = dto.getMaxSelecciones();
+                long numOpciones = dto.getOpciones() == null ? 0
+                        : dto.getOpciones().stream().filter(o -> o != null && !o.isBlank()).count();
+                if (esMixta) numOpciones += 1; // la opción "Otros" también cuenta
+                if (maxSel < 1) {
+                    throw new IllegalArgumentException("El máximo de selecciones debe ser al menos 1");
+                }
+                if (maxSel > numOpciones) {
+                    throw new IllegalArgumentException("El máximo de selecciones no puede superar el número de opciones");
+                }
+                pregunta.setMaxSelecciones(maxSel);
+            } else {
+                pregunta.setMaxSelecciones(null);
+            }
+            pregunta.setMinCaracteres(null);
+            pregunta.setMaxCaracteres(null);
+        }
+    }
+
     private PreguntaResponseDTO toDTO(Pregunta p) {
         PreguntaResponseDTO dto = new PreguntaResponseDTO();
         dto.setIdPregunta(p.getIdPregunta());
@@ -154,6 +202,9 @@ public class PreguntaService {
         dto.setTipoPregunta(p.getTipoPregunta() != null ? p.getTipoPregunta().name() : null);
         dto.setTipoPreguntaCerrada(p.getTipoPreguntaCerrada() != null ? p.getTipoPreguntaCerrada().name() : null);
         dto.setEsMixta(p.getEsMixta());
+        dto.setMinCaracteres(p.getMinCaracteres());
+        dto.setMaxCaracteres(p.getMaxCaracteres());
+        dto.setMaxSelecciones(p.getMaxSelecciones());
         dto.setIdEncuesta(p.getEncuesta().getIdEncuesta());
 
         List<OpcionResponseDTO> opciones = opcionRespuestaRepository

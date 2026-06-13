@@ -33,6 +33,11 @@ export class PreguntasComponent implements OnInit {
   opciones: string[] = ['', ''];
   esMixtaPregunta = false;
 
+  // CU07 - Criterios de validación
+  minCaracteres: number | null = null;
+  maxCaracteres: number | null = null;
+  maxSelecciones: number | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -76,6 +81,9 @@ export class PreguntasComponent implements OnInit {
     this.tipoCerrada = 'DICOTOMICA';
     this.opciones = ['Sí', 'No'];
     this.esMixtaPregunta = false;
+    this.minCaracteres = null;
+    this.maxCaracteres = null;
+    this.maxSelecciones = null;
     this.errorModal = '';
     this.mostrarModal = true;
   }
@@ -89,6 +97,9 @@ export class PreguntasComponent implements OnInit {
     this.tipoPrincipal = p.tipoPregunta as TipoPrincipal;
     this.tipoCerrada = (p.tipoPreguntaCerrada as TipoCerrada) ?? 'DICOTOMICA';
     this.esMixtaPregunta = !!p.esMixta;
+    this.minCaracteres = p.minCaracteres ?? null;
+    this.maxCaracteres = p.maxCaracteres ?? null;
+    this.maxSelecciones = p.maxSelecciones ?? null;
     // La opción "Otros" (esMixta) es implícita: no se muestra en el editor
     const editables = p.opciones?.filter(o => !o.esMixta) ?? [];
     this.opciones = editables.length ? editables.map(o => o.textoOpcion) : ['', ''];
@@ -157,6 +168,33 @@ export class PreguntasComponent implements OnInit {
       }
     }
 
+    // CU07 - Validación de criterios
+    if (this.tipoPrincipal === 'ABIERTA') {
+      if (this.minCaracteres != null && this.minCaracteres < 0) {
+        this.errorModal = 'El mínimo de caracteres no puede ser negativo.';
+        return;
+      }
+      if (this.maxCaracteres != null && this.maxCaracteres < 1) {
+        this.errorModal = 'El máximo de caracteres debe ser mayor a 0.';
+        return;
+      }
+      if (this.minCaracteres != null && this.maxCaracteres != null && this.minCaracteres > this.maxCaracteres) {
+        this.errorModal = 'El valor mínimo no puede ser mayor al máximo.';
+        return;
+      }
+    }
+    if (this.esMultiple() && this.maxSelecciones != null) {
+      const numOpciones = this.opciones.filter(o => o.trim() !== '').length + (this.esMixtaPregunta ? 1 : 0);
+      if (this.maxSelecciones < 1) {
+        this.errorModal = 'El máximo de selecciones debe ser al menos 1.';
+        return;
+      }
+      if (this.maxSelecciones > numOpciones) {
+        this.errorModal = 'El máximo de selecciones no puede superar el número de opciones.';
+        return;
+      }
+    }
+
     const tipoCerradaBackend =
       (this.tipoCerrada === 'DICOTOMICA' || this.tipoCerrada === 'ELECCION_UNICA') ? 'ELECCION_UNICA' :
       this.tipoCerrada === 'ELECCION_MULTIPLE' ? 'ELECCION_MULTIPLE' :
@@ -168,9 +206,14 @@ export class PreguntasComponent implements OnInit {
       descripcionPregunta: this.form.value.descripcionPregunta,
       obligatoriaPregunta: this.form.value.obligatoriaPregunta ?? false,
       tipoPregunta: this.tipoPrincipal,
+      ...(this.tipoPrincipal === 'ABIERTA' && {
+        minCaracteres: this.minCaracteres,
+        maxCaracteres: this.maxCaracteres
+      }),
       ...(this.tipoPrincipal === 'CERRADA' && {
         tipoPreguntaCerrada: tipoCerradaBackend,
         esMixta: this.puedeSerMixta() && this.esMixtaPregunta,
+        maxSelecciones: this.esMultiple() ? this.maxSelecciones : null,
         opciones: this.opciones.filter(o => o.trim() !== '')
       })
     };
@@ -231,6 +274,19 @@ export class PreguntasComponent implements OnInit {
   labelEscala(p: Pregunta): string {
     if (p.tipoPreguntaCerrada === 'ESCALA' && p.opciones?.length >= 2)
       return `Rango: ${p.opciones[0].textoOpcion} – ${p.opciones[1].textoOpcion}`;
+    return '';
+  }
+
+  // CU07 - Texto descriptivo de la validación configurada
+  labelValidacion(p: Pregunta): string {
+    if (p.tipoPregunta === 'ABIERTA') {
+      if (p.minCaracteres != null && p.maxCaracteres != null) return `${p.minCaracteres}–${p.maxCaracteres} caracteres`;
+      if (p.maxCaracteres != null) return `Máx. ${p.maxCaracteres} caracteres`;
+      if (p.minCaracteres != null) return `Mín. ${p.minCaracteres} caracteres`;
+    }
+    if (p.tipoPreguntaCerrada === 'ELECCION_MULTIPLE' && p.maxSelecciones != null) {
+      return `Máx. ${p.maxSelecciones} selecciones`;
+    }
     return '';
   }
 }
