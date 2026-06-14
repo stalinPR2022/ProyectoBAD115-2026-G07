@@ -22,6 +22,11 @@ export class ResultadosComponent implements OnInit {
   error = '';
   tipoGrafico: Record<number, TipoGrafico> = {};
 
+  // CU10 - Reporte
+  mostrarReporte = false;
+  generando = '';
+  errorReporte = '';
+
   private readonly paleta = [
     '#2B579A', '#00A99D', '#E8833A', '#9B59B6', '#3FA796',
     '#D7556A', '#5B8DEF', '#F2B134', '#48C78E', '#6C7A89'
@@ -121,4 +126,130 @@ export class ResultadosComponent implements OnInit {
   }
 
   get baseLinea(): number { return 14 + (160 - 14 - 30); }
+
+  // ── CU10 - Generar reporte ────────────────────────────
+  abrirReporte(): void {
+    this.errorReporte = '';
+    this.mostrarReporte = true;
+  }
+  cerrarReporte(): void {
+    this.mostrarReporte = false;
+    this.generando = '';
+  }
+
+  descargarFormato(formato: 'excel' | 'pdf' | 'word'): void {
+    if (!this.resultados || this.generando) return;
+    this.generando = formato;
+    this.errorReporte = '';
+    const ext = formato === 'excel' ? 'xlsx' : formato === 'word' ? 'docx' : 'pdf';
+    const id = this.resultados.idEncuesta;
+    this.resultadoService.descargar(id, formato).subscribe({
+      next: (blob) => {
+        this.guardarBlob(blob, `reporte_encuesta_${id}.${ext}`);
+        this.generando = '';
+        this.mostrarReporte = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorReporte = 'No se pudo generar el reporte. Inténtalo de nuevo.';
+        this.generando = '';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private guardarBlob(blob: Blob, nombre: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private recortar(s: string, max: number): string {
+    return s.length > max ? s.slice(0, max - 1) + '…' : s;
+  }
+
+  // Genera una imagen (PNG/JPG) del reporte dibujando en un canvas
+  descargarImagen(tipo: 'png' | 'jpg'): void {
+    const r = this.resultados;
+    if (!r) return;
+
+    const W = 780, padX = 40, barH = 26, gap = 10;
+    let h = 110;
+    for (const p of r.preguntas) {
+      h += 40;
+      const filas = this.esTexto(p) ? Math.max(1, p.respuestasTexto.length) : p.opciones.length;
+      h += filas * (barH + gap) + 16;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, h);
+
+    let y = 48;
+    ctx.fillStyle = '#2B579A';
+    ctx.font = 'bold 22px Segoe UI, sans-serif';
+    ctx.fillText(this.recortar(r.tituloEncuesta, 60), padX, y);
+    y += 26;
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '13px Segoe UI, sans-serif';
+    const sub = `Total de respuestas: ${r.totalRespuestas}` +
+      (r.opcionMasSeleccionada ? `   ·   Más seleccionada: ${r.opcionMasSeleccionada}` : '');
+    ctx.fillText(sub, padX, y);
+    y += 28;
+
+    let n = 1;
+    for (const p of r.preguntas) {
+      y += 24;
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 15px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(this.recortar(`${n++}. ${p.descripcionPregunta}`, 72), padX, y);
+
+      if (this.esTexto(p)) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '13px Segoe UI, sans-serif';
+        if (p.respuestasTexto.length === 0) {
+          y += barH; ctx.fillText('(sin respuestas)', padX, y);
+        } else {
+          for (const t of p.respuestasTexto) { y += barH; ctx.fillText('• ' + this.recortar(t, 95), padX, y); }
+        }
+        y += gap;
+      } else {
+        const max = this.maxConteo(p);
+        const labelW = 190;
+        const barMaxW = W - padX * 2 - labelW - 100;
+        for (let i = 0; i < p.opciones.length; i++) {
+          const o = p.opciones[i];
+          y += barH + gap;
+          ctx.fillStyle = '#374151';
+          ctx.font = '12px Segoe UI, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(this.recortar(o.etiqueta, 26), padX + labelW, y - 7);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#f3f4f6';
+          ctx.fillRect(padX + labelW + 10, y - barH + 5, barMaxW, 18);
+          ctx.fillStyle = this.color(i);
+          ctx.fillRect(padX + labelW + 10, y - barH + 5, Math.max(2, barMaxW * (o.cantidad / max)), 18);
+          ctx.fillStyle = '#6b7280';
+          ctx.fillText(`${o.cantidad} (${o.porcentaje}%)`, padX + labelW + 10 + barMaxW + 8, y - 7);
+        }
+        y += 8;
+      }
+    }
+
+    const mime = tipo === 'jpg' ? 'image/jpeg' : 'image/png';
+    canvas.toBlob((blob) => {
+      if (blob) this.guardarBlob(blob, `reporte_encuesta_${r.idEncuesta}.${tipo}`);
+      this.mostrarReporte = false;
+      this.cdr.detectChanges();
+    }, mime, 0.95);
+  }
 }

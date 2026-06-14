@@ -14,6 +14,14 @@
         </div>
       }
     </div>
+    @if (resultados && resultados.totalRespuestas > 0) {
+      <button class="btn-reporte" (click)="abrirReporte()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Generar reporte
+      </button>
+    }
   </div>
 
   @if (error) { <div class="alert-error">{{ error }}</div> }
@@ -144,3 +152,41 @@
     }
   }
 </div>
+
+<!-- Modal: Generar reporte (CU10) -->
+@if (mostrarReporte) {
+  <div class="modal-overlay" (click)="cerrarReporte()">
+    <div class="modal-reporte" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h2>Generar reporte</h2>
+        <button class="btn-close" (click)="cerrarReporte()">✕</button>
+      </div>
+      <p class="modal-sub">Elige el formato de exportación:</p>
+
+      @if (errorReporte) { <div class="alert-error">{{ errorReporte }}</div> }
+
+      <div class="formato-grid">
+        <button class="formato-btn" (click)="descargarImagen('png')" [disabled]="!!generando">
+          <span class="formato-ico ico-img">PNG</span>
+          <span class="formato-nom">Imagen PNG</span>
+        </button>
+        <button class="formato-btn" (click)="descargarImagen('jpg')" [disabled]="!!generando">
+          <span class="formato-ico ico-img">JPG</span>
+          <span class="formato-nom">Imagen JPG</span>
+        </button>
+        <button class="formato-btn" (click)="descargarFormato('excel')" [disabled]="!!generando">
+          <span class="formato-ico ico-xls">XLS</span>
+          <span class="formato-nom">{{ generando === 'excel' ? 'Generando...' : 'Excel' }}</span>
+        </button>
+        <button class="formato-btn" (click)="descargarFormato('pdf')" [disabled]="!!generando">
+          <span class="formato-ico ico-pdf">PDF</span>
+          <span class="formato-nom">{{ generando === 'pdf' ? 'Generando...' : 'PDF' }}</span>
+        </button>
+        <button class="formato-btn" (click)="descargarFormato('word')" [disabled]="!!generando">
+          <span class="formato-ico ico-doc">DOC</span>
+          <span class="formato-nom">{{ generando === 'word' ? 'Generando...' : 'Word' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}

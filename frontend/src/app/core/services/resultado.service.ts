@@ -39,4 +39,8 @@ export class ResultadoService {
   obtener(idEncuesta: number): Observable<Resultados> {
     return this.http.get<Resultados>(`${this.api}/${idEncuesta}/resultados`);
   }
+
+  descargar(idEncuesta: number, formato: 'excel' | 'pdf' | 'word'): Observable<Blob> {
+    return this.http.get(`${this.api}/${idEncuesta}/reporte/${formato}`, { responseType: 'blob' });
+  }
 }

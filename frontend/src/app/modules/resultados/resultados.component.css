@@ -98,7 +98,51 @@
 .linea-valor { font-size: 9px; fill: var(--brand-primary); font-weight: 700; }
 .linea-eje { font-size: 8.5px; fill: #9ca3af; }
 
+/* Botón generar reporte */
+.btn-reporte {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--brand-primary); color: #fff; border: none;
+  padding: 10px 18px; border-radius: 8px; font-size: 0.875rem;
+  font-weight: 600; cursor: pointer; transition: background 0.2s;
+}
+.btn-reporte:hover { background: var(--brand-primary-hover); }
+.btn-reporte svg { width: 16px; height: 16px; }
+
+/* Modal de reporte */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-reporte {
+  background: #fff; border-radius: 14px; width: 100%; max-width: 480px;
+  padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; }
+.modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #111827; }
+.btn-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #6b7280; }
+.modal-sub { font-size: 0.875rem; color: #6b7280; margin: 6px 0 18px; }
+
+.formato-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.formato-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 10px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  background: #fff; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.formato-btn:hover:not(:disabled) { border-color: var(--brand-primary); background: #fafbff; }
+.formato-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.formato-ico {
+  width: 44px; height: 44px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 800; color: #fff;
+}
+.ico-img { background: #0891b2; }
+.ico-xls { background: #16a34a; }
+.ico-pdf { background: #dc2626; }
+.ico-doc { background: #2563eb; }
+.formato-nom { font-size: 0.8rem; font-weight: 600; color: #374151; }
+
 @media (max-width: 600px) {
   .barra-label { width: 90px; }
   .barra-valor { width: 70px; }
+  .formato-grid { grid-template-columns: repeat(2, 1fr); }
 }
