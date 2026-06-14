@@ -111,6 +111,10 @@
 .btn-enlace:hover { background: var(--brand-primary); color: #fff; }
 .btn-enlace svg { width: 14px; height: 14px; }
 
+.btn-resultados { background: #f5f3ff; color: #7c3aed; }
+.btn-resultados:hover { background: #7c3aed; color: #fff; }
+.btn-resultados svg { width: 14px; height: 14px; }
+
 .btn-icon {
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: 6px; border: none;

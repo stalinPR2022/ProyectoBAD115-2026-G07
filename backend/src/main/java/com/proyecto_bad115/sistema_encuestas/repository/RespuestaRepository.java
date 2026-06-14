@@ -9,4 +9,7 @@ public interface RespuestaRepository extends JpaRepository<Respuesta, Integer> {
 
     // CU11 - Detecta respuestas duplicadas: mismo correo en la misma encuesta
     boolean existsByEncuestaIdEncuestaAndUsuarioEmailUser(Integer idEncuesta, String emailUser);
+
+    // CU09 - Total de respuestas registradas en una encuesta
+    long countByEncuestaIdEncuesta(Integer idEncuesta);
 }

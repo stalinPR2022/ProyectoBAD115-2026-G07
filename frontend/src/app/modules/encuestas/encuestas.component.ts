@@ -104,6 +104,10 @@ export class EncuestasComponent implements OnInit {
     this.router.navigate(['/dashboard/encuestas', e.idEncuesta, 'preguntas']);
   }
 
+  irAResultados(e: Encuesta): void {
+    this.router.navigate(['/dashboard/encuestas', e.idEncuesta, 'resultados']);
+  }
+
   cerrarModal(): void {
     this.mostrarModal = false;
   }

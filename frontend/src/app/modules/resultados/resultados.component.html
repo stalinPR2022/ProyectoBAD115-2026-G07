@@ -1,0 +1,146 @@
+<div class="page">
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="volver()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Encuestas
+      </button>
+      @if (resultados) {
+        <div>
+          <h1 class="page-title">{{ resultados.tituloEncuesta }}</h1>
+          <p class="page-subtitle">Resultados · {{ resultados.estadoNombre }}</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+
+  @if (cargando) {
+    <div class="empty-state">Cargando resultados...</div>
+  } @else if (resultados) {
+
+    <!-- Resumen general -->
+    <div class="resumen-cards">
+      <div class="stat-card">
+        <span class="stat-num">{{ resultados.totalRespuestas }}</span>
+        <span class="stat-label">Respuesta{{ resultados.totalRespuestas !== 1 ? 's' : '' }} recibida{{ resultados.totalRespuestas !== 1 ? 's' : '' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ resultados.preguntas.length }}</span>
+        <span class="stat-label">Pregunta{{ resultados.preguntas.length !== 1 ? 's' : '' }}</span>
+      </div>
+      @if (resultados.opcionMasSeleccionada) {
+        <div class="stat-card stat-card-ancha">
+          <span class="stat-num stat-texto">{{ resultados.opcionMasSeleccionada }}</span>
+          <span class="stat-label">Opción más seleccionada</span>
+        </div>
+      }
+    </div>
+
+    @if (resultados.totalRespuestas === 0) {
+      <div class="empty-state empty-grande">
+        <p>📊 Aún no se han registrado respuestas para esta encuesta.</p>
+        <p>Comparte el enlace para empezar a recibir respuestas.</p>
+      </div>
+    } @else {
+
+      <!-- Resultados por pregunta -->
+      <div class="preguntas-resultados">
+        @for (p of resultados.preguntas; track p.idPregunta; let i = $index) {
+          <div class="resultado-card">
+            <div class="resultado-head">
+              <div class="resultado-titulo">
+                <span class="resultado-num">{{ i + 1 }}</span>
+                <h3>{{ p.descripcionPregunta }}</h3>
+              </div>
+              <span class="resultado-total">{{ p.totalRespuestas }} respuesta{{ p.totalRespuestas !== 1 ? 's' : '' }}</span>
+            </div>
+
+            @if (esTexto(p)) {
+              <!-- Pregunta abierta: lista de textos -->
+              @if (p.respuestasTexto.length === 0) {
+                <p class="sin-datos">Sin respuestas.</p>
+              } @else {
+                <div class="texto-respuestas">
+                  @for (t of p.respuestasTexto; track $index) {
+                    <div class="texto-item">{{ t }}</div>
+                  }
+                </div>
+              }
+            } @else {
+              <!-- Selector de tipo de gráfico -->
+              <div class="grafico-switch">
+                <button [class.activo]="tipoGrafico[p.idPregunta] === 'pastel'" (click)="cambiarGrafico(p, 'pastel')">Pastel</button>
+                <button [class.activo]="tipoGrafico[p.idPregunta] === 'barras'" (click)="cambiarGrafico(p, 'barras')">Barras</button>
+                <button [class.activo]="tipoGrafico[p.idPregunta] === 'linea'" (click)="cambiarGrafico(p, 'linea')">Líneas</button>
+              </div>
+
+              @if (totalConteo(p) === 0) {
+                <p class="sin-datos">Sin respuestas para graficar.</p>
+              } @else {
+                <div class="grafico-zona">
+
+                  <!-- PASTEL -->
+                  @if (tipoGrafico[p.idPregunta] === 'pastel') {
+                    <div class="pastel-wrap">
+                      <svg viewBox="0 0 200 200" class="svg-pastel">
+                        @for (s of slices(p); track s.etiqueta) {
+                          <path [attr.d]="s.d" [attr.fill]="s.color" stroke="#fff" stroke-width="1.5" />
+                        }
+                      </svg>
+                      <div class="leyenda">
+                        @for (s of slices(p); track s.etiqueta) {
+                          <div class="leyenda-item">
+                            <span class="leyenda-color" [style.background]="s.color"></span>
+                            <span class="leyenda-texto">{{ s.etiqueta }}</span>
+                            <span class="leyenda-valor">{{ s.cantidad }} ({{ s.porcentaje }}%)</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <!-- BARRAS -->
+                  @if (tipoGrafico[p.idPregunta] === 'barras') {
+                    <div class="barras">
+                      @for (o of p.opciones; track o.etiqueta; let bi = $index) {
+                        <div class="barra-fila">
+                          <span class="barra-label" [title]="o.etiqueta">{{ o.etiqueta }}</span>
+                          <div class="barra-track">
+                            <div class="barra-fill" [style.width.%]="(o.cantidad / maxConteo(p)) * 100"
+                              [style.background]="color(bi)"></div>
+                          </div>
+                          <span class="barra-valor">{{ o.cantidad }} ({{ o.porcentaje }}%)</span>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- LÍNEAS -->
+                  @if (tipoGrafico[p.idPregunta] === 'linea') {
+                    <div class="linea-wrap">
+                      <svg viewBox="0 0 320 160" class="svg-linea">
+                        <line x1="26" [attr.y1]="baseLinea" x2="294" [attr.y2]="baseLinea" stroke="#e5e7eb" stroke-width="1" />
+                        <polyline [attr.points]="polilinea(p)" fill="none" stroke="var(--brand-primary)" stroke-width="2.5"
+                          stroke-linejoin="round" stroke-linecap="round" />
+                        @for (pt of puntosLinea(p); track pt.etiqueta) {
+                          <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="var(--brand-primary)" />
+                          <text [attr.x]="pt.x" [attr.y]="pt.y - 9" text-anchor="middle" class="linea-valor">{{ pt.cantidad }}</text>
+                          <text [attr.x]="pt.x" [attr.y]="baseLinea + 16" text-anchor="middle" class="linea-eje">{{ pt.etiqueta }}</text>
+                        }
+                      </svg>
+                    </div>
+                  }
+
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

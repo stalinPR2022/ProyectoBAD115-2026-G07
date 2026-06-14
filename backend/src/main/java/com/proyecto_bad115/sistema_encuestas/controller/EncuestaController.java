@@ -3,6 +3,7 @@ package com.proyecto_bad115.sistema_encuestas.controller;
 import com.proyecto_bad115.sistema_encuestas.dto.EncuestaRequestDTO;
 import com.proyecto_bad115.sistema_encuestas.dto.EncuestaResponseDTO;
 import com.proyecto_bad115.sistema_encuestas.service.EncuestaService;
+import com.proyecto_bad115.sistema_encuestas.service.ResultadoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,11 @@ import java.util.NoSuchElementException;
 public class EncuestaController {
 
     private final EncuestaService encuestaService;
+    private final ResultadoService resultadoService;
 
-    public EncuestaController(EncuestaService encuestaService) {
+    public EncuestaController(EncuestaService encuestaService, ResultadoService resultadoService) {
         this.encuestaService = encuestaService;
+        this.resultadoService = resultadoService;
     }
 
     @GetMapping
@@ -63,6 +66,15 @@ public class EncuestaController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("mensaje", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/resultados")
+    public ResponseEntity<?> resultados(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(resultadoService.obtener(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
         }
     }
 
