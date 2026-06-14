@@ -59,7 +59,7 @@ export class UsuariosComponent implements OnInit {
     this.cargando = true;
     this.usuarioService.listar().subscribe({
       next: (data) => { this.usuarios = data; this.cargando = false; this.cdr.detectChanges(); },
-      error: () => { this.error = 'Error al cargar usuarios.'; this.cargando = false; }
+      error: () => { this.error = 'Error al cargar usuarios.'; this.cargando = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -103,13 +103,13 @@ export class UsuariosComponent implements OnInit {
       };
       this.usuarioService.actualizar(this.usuarioEditandoId, dto).subscribe({
         next: () => { this.mostrarExito('Usuario actualizado.'); this.cerrarModal(); this.cargarUsuarios(); },
-        error: (e) => { this.error = e.error?.mensaje || 'Error al actualizar.'; this.guardando = false; }
+        error: (e) => { this.error = e.error?.mensaje || 'Error al actualizar.'; this.guardando = false; this.cdr.detectChanges(); }
       });
     } else {
       const dto: CrearUsuario = this.form.value;
       this.usuarioService.crear(dto).subscribe({
         next: () => { this.mostrarExito('Usuario creado correctamente.'); this.cerrarModal(); this.cargarUsuarios(); },
-        error: (e) => { this.error = e.error?.mensaje || 'Error al crear usuario.'; this.guardando = false; }
+        error: (e) => { this.error = e.error?.mensaje || 'Error al crear usuario.'; this.guardando = false; this.cdr.detectChanges(); }
       });
     }
   }
@@ -146,11 +146,13 @@ export class UsuariosComponent implements OnInit {
   private mostrarExito(msg: string): void {
     this.exito = msg;
     this.guardando = false;
-    setTimeout(() => this.exito = '', 3500);
+    this.cdr.detectChanges();
+    setTimeout(() => { this.exito = ''; this.cdr.detectChanges(); }, 3500);
   }
 
   private mostrarError(msg: string): void {
     this.error = msg;
-    setTimeout(() => this.error = '', 3500);
+    this.cdr.detectChanges();
+    setTimeout(() => { this.error = ''; this.cdr.detectChanges(); }, 3500);
   }
 }
