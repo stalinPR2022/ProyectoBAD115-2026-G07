@@ -59,6 +59,7 @@
               <td class="text-center">{{ u.intentosFallidos }}</td>
               <td class="acciones">
                 <button class="btn-icon btn-edit" title="Editar" (click)="abrirEditar(u)">✏️</button>
+                <button class="btn-icon btn-roles" title="Gestionar roles" (click)="abrirRoles(u)">🛡️</button>
                 @if (u.estadoUser === ACTIVO) {
                   <button class="btn-icon btn-warning" title="Dar de baja" (click)="darDeBaja(u.idUser)">🚫</button>
                 }
@@ -133,6 +134,46 @@
         </div>
 
       </form>
+    </div>
+  </div>
+}
+
+@if (mostrarRolesModal && usuarioRoles) {
+  <div class="modal-overlay" (click)="cerrarRoles()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Gestionar roles</h3>
+        <button class="btn-close" (click)="cerrarRoles()">✕</button>
+      </div>
+
+      <div class="modal-form">
+        <p class="roles-user">Usuario: <strong>{{ usuarioRoles.nombreUser }}</strong></p>
+
+        @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+        @if (rolesDisponibles.length === 0) {
+          <div class="empty-state">Cargando roles...</div>
+        } @else {
+          <div class="roles-lista">
+            @for (r of rolesDisponibles; track r.idRol) {
+              <label class="rol-item" [class.selected]="rolesSeleccionados.has(r.idRol)">
+                <input type="checkbox" [checked]="rolesSeleccionados.has(r.idRol)" (change)="toggleRol(r.idRol)" />
+                <span class="rol-info">
+                  <span class="rol-nombre">{{ r.nombreRol }}</span>
+                  <span class="rol-desc">{{ r.descripcionRol }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="cerrarRoles()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="guardarRoles()" [disabled]="guardandoRoles">
+            {{ guardandoRoles ? 'Guardando...' : 'Guardar roles' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 }

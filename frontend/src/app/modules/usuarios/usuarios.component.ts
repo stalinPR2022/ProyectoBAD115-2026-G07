@@ -2,7 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { UsuarioService, Usuario, CrearUsuario, ActualizarUsuario } from '../../core/services/usuario.service';
+import { RolService, RolResponse } from '../../core/services/rol.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -30,8 +32,17 @@ export class UsuariosComponent implements OnInit {
 
   soloBloqueados = false;
 
+  // Gestión de roles del usuario
+  mostrarRolesModal = false;
+  usuarioRoles: Usuario | null = null;
+  rolesDisponibles: RolResponse[] = [];
+  rolesSeleccionados = new Set<number>();
+  private rolesOriginales = new Set<number>();
+  guardandoRoles = false;
+
   constructor(
     private usuarioService: UsuarioService,
+    private rolService: RolService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute
@@ -133,6 +144,70 @@ export class UsuariosComponent implements OnInit {
     this.usuarioService.desbloquear(id).subscribe({
       next: () => { this.mostrarExito('Usuario desbloqueado. Se envió notificación por correo.'); this.cargarUsuarios(); },
       error: () => this.mostrarError('Error al desbloquear usuario.')
+    });
+  }
+
+  // ── Gestión de roles del usuario ──────────────────────
+  abrirRoles(u: Usuario): void {
+    this.usuarioRoles = u;
+    this.error = '';
+    this.guardandoRoles = false;
+    this.rolesDisponibles = [];
+    this.mostrarRolesModal = true;
+    this.rolService.listar().subscribe({
+      next: (roles) => {
+        this.rolesDisponibles = roles;
+        const actuales = roles.filter(r => u.roles.includes(r.nombreRol)).map(r => r.idRol);
+        this.rolesOriginales = new Set(actuales);
+        this.rolesSeleccionados = new Set(actuales);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.mostrarRolesModal = false;
+        this.mostrarError('No se pudieron cargar los roles.');
+      }
+    });
+  }
+
+  toggleRol(rolId: number): void {
+    if (this.rolesSeleccionados.has(rolId)) this.rolesSeleccionados.delete(rolId);
+    else this.rolesSeleccionados.add(rolId);
+  }
+
+  cerrarRoles(): void {
+    this.mostrarRolesModal = false;
+    this.usuarioRoles = null;
+  }
+
+  guardarRoles(): void {
+    if (!this.usuarioRoles || this.guardandoRoles) return;
+    const userId = this.usuarioRoles.idUser;
+    const aAgregar = [...this.rolesSeleccionados].filter(id => !this.rolesOriginales.has(id));
+    const aQuitar = [...this.rolesOriginales].filter(id => !this.rolesSeleccionados.has(id));
+
+    if (aAgregar.length === 0 && aQuitar.length === 0) {
+      this.cerrarRoles();
+      return;
+    }
+
+    this.guardandoRoles = true;
+    this.error = '';
+    const ops = [
+      ...aAgregar.map(id => this.rolService.asignarRolAUsuario(id, userId)),
+      ...aQuitar.map(id => this.rolService.quitarRolAUsuario(id, userId))
+    ];
+    forkJoin(ops).subscribe({
+      next: () => {
+        this.guardandoRoles = false;
+        this.cerrarRoles();
+        this.mostrarExito('Roles actualizados correctamente.');
+        this.cargarUsuarios();
+      },
+      error: () => {
+        this.guardandoRoles = false;
+        this.error = 'No se pudieron actualizar los roles.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
