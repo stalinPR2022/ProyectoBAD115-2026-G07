@@ -4,7 +4,6 @@ import com.proyecto_bad115.sistema_encuestas.dto.*;
 import com.proyecto_bad115.sistema_encuestas.model.*;
 import com.proyecto_bad115.sistema_encuestas.repository.*;
 import jakarta.transaction.Transactional;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,50 +11,39 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 /**
- * Flujo público del encuestado (sin autenticación). CU11-CU13.
+ * Flujo de respuesta del encuestado. La bienvenida y las preguntas se cargan
+ * públicamente; el envío requiere autenticación (el encuestado se identifica por su cuenta).
  */
 @Service
 public class PublicoService {
 
-    private static final String REGEX_EMAIL = "^[\\w.+-]+@[\\w-]+\\.[\\w.-]+$";
-
     private final EncuestaRepository encuestaRepository;
     private final PreguntaRepository preguntaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
-    private final UsuarioRolRepository usuarioRolRepository;
     private final RespuestaRepository respuestaRepository;
     private final DetalleRespuestaRepository detalleRespuestaRepository;
     private final OpcionRespuestaRepository opcionRespuestaRepository;
     private final PreguntaService preguntaService;
-    private final PasswordEncoder passwordEncoder;
 
     public PublicoService(EncuestaRepository encuestaRepository,
                           PreguntaRepository preguntaRepository,
                           UsuarioRepository usuarioRepository,
-                          RolRepository rolRepository,
-                          UsuarioRolRepository usuarioRolRepository,
                           RespuestaRepository respuestaRepository,
                           DetalleRespuestaRepository detalleRespuestaRepository,
                           OpcionRespuestaRepository opcionRespuestaRepository,
-                          PreguntaService preguntaService,
-                          PasswordEncoder passwordEncoder) {
+                          PreguntaService preguntaService) {
         this.encuestaRepository = encuestaRepository;
         this.preguntaRepository = preguntaRepository;
         this.usuarioRepository = usuarioRepository;
-        this.rolRepository = rolRepository;
-        this.usuarioRolRepository = usuarioRolRepository;
         this.respuestaRepository = respuestaRepository;
         this.detalleRespuestaRepository = detalleRespuestaRepository;
         this.opcionRespuestaRepository = opcionRespuestaRepository;
         this.preguntaService = preguntaService;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    /** Carga la encuesta vigente a partir del token (pantalla de bienvenida). */
+    /** Carga la encuesta vigente a partir del token (pantalla de bienvenida, pública). */
     public EncuestaPublicaDTO cargarEncuesta(String token) {
         return toPublicaDTO(obtenerVigente(token));
     }
@@ -66,45 +54,30 @@ public class PublicoService {
         return preguntaService.listarPorEncuesta(encuesta.getIdEncuesta());
     }
 
-    /** CU11 - Registra los datos personales del participante. */
-    @Transactional
-    public ParticipanteResponseDTO registrarParticipante(String token, ParticipanteRequestDTO dto) {
+    /** Indica si el encuestado autenticado ya respondió esta encuesta. */
+    public boolean yaRespondio(String token, String email) {
         Encuesta encuesta = obtenerVigente(token);
-        String email = normalizar(dto.getEmail());
-        validarDatos(dto, email);
-
-        if (respuestaRepository.existsByEncuestaIdEncuestaAndUsuarioEmailUser(encuesta.getIdEncuesta(), email)) {
-            throw new IllegalStateException("Este correo electrónico ya respondió esta encuesta");
-        }
-
-        Usuario usuario = usuarioRepository.findByEmailUser(email)
-                .map(existente -> {
-                    existente.setNombreUser(dto.getNombre().trim());
-                    existente.setFechaNacimiento(dto.getFechaNacimiento());
-                    return usuarioRepository.save(existente);
-                })
-                .orElseGet(() -> crearEncuestado(dto, email));
-
-        return new ParticipanteResponseDTO(encuesta.getIdEncuesta(), usuario.getEmailUser(), usuario.getNombreUser());
+        return respuestaRepository.existsByEncuestaIdEncuestaAndUsuarioEmailUser(
+                encuesta.getIdEncuesta(), normalizar(email));
     }
 
-    /** CU13 - Registra de forma definitiva todas las respuestas del encuestado. */
+    /** CU13 - Registra de forma definitiva todas las respuestas del encuestado autenticado. */
     @Transactional
-    public RespuestaConfirmacionDTO enviarRespuestas(String token, RespuestaEnvioDTO dto) {
+    public RespuestaConfirmacionDTO enviarRespuestas(String token, String email, List<DetalleEnvioDTO> respuestas) {
         Encuesta encuesta = obtenerVigente(token); // si cerró durante el llenado, falla aquí
-        String email = normalizar(dto.getEmail());
+        String correo = normalizar(email);
 
-        Usuario usuario = usuarioRepository.findByEmailUser(email)
-                .orElseThrow(() -> new IllegalArgumentException("Debes ingresar tus datos personales antes de responder"));
+        Usuario usuario = usuarioRepository.findByEmailUser(correo)
+                .orElseThrow(() -> new IllegalArgumentException("Tu sesión no es válida. Vuelve a iniciar sesión."));
 
-        if (respuestaRepository.existsByEncuestaIdEncuestaAndUsuarioEmailUser(encuesta.getIdEncuesta(), email)) {
+        if (respuestaRepository.existsByEncuestaIdEncuestaAndUsuarioEmailUser(encuesta.getIdEncuesta(), correo)) {
             throw new IllegalStateException("Ya enviaste tus respuestas para esta encuesta");
         }
 
         List<Pregunta> preguntas = preguntaRepository.findByEncuestaIdEncuesta(encuesta.getIdEncuesta());
         Map<Integer, DetalleEnvioDTO> mapa = new HashMap<>();
-        if (dto.getRespuestas() != null) {
-            for (DetalleEnvioDTO d : dto.getRespuestas()) {
+        if (respuestas != null) {
+            for (DetalleEnvioDTO d : respuestas) {
                 if (d.getIdPregunta() != null) mapa.put(d.getIdPregunta(), d);
             }
         }
@@ -227,40 +200,6 @@ public class PublicoService {
             throw new IllegalStateException("Esta encuesta ya cerró y no permite nuevas respuestas");
         }
         return encuesta;
-    }
-
-    private void validarDatos(ParticipanteRequestDTO dto, String email) {
-        if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre es obligatorio");
-        }
-        if (!email.matches(REGEX_EMAIL)) {
-            throw new IllegalArgumentException("El correo electrónico no es válido");
-        }
-        if (dto.getFechaNacimiento() == null) {
-            throw new IllegalArgumentException("La fecha de nacimiento es obligatoria");
-        }
-        if (dto.getFechaNacimiento().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("La fecha de nacimiento no puede ser futura");
-        }
-    }
-
-    private Usuario crearEncuestado(ParticipanteRequestDTO dto, String email) {
-        Usuario usuario = new Usuario();
-        usuario.setNombreUser(dto.getNombre().trim());
-        usuario.setEmailUser(email);
-        usuario.setContraseniaUser(passwordEncoder.encode(UUID.randomUUID().toString())); // sin login
-        usuario.setFechaNacimiento(dto.getFechaNacimiento());
-        usuario.setEstadoUser(EstadoUsuario.ACTIVO);
-        usuario.setIntentosFallidos(0);
-        Usuario guardado = usuarioRepository.save(usuario);
-
-        rolRepository.findByNombreRol("ENCUESTADO").ifPresent(rol -> {
-            UsuarioRol ur = new UsuarioRol();
-            ur.setUsuario(guardado);
-            ur.setRol(rol);
-            usuarioRolRepository.save(ur);
-        });
-        return guardado;
     }
 
     private String normalizar(String email) {

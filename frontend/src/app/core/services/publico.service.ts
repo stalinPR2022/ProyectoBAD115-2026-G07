@@ -13,18 +13,6 @@ export interface EncuestaPublica {
   totalPreguntas: number;
 }
 
-export interface ParticipanteRequest {
-  nombre: string;
-  email: string;
-  fechaNacimiento: string;
-}
-
-export interface ParticipanteResponse {
-  idEncuesta: number;
-  email: string;
-  nombre: string;
-}
-
 export interface DetalleEnvio {
   idPregunta: number;
   texto: string;
@@ -35,22 +23,23 @@ export interface DetalleEnvio {
   otrosTexto: string;
 }
 
-export interface RespuestaEnvio {
-  email: string;
-  respuestas: DetalleEnvio[];
-}
-
 export interface RespuestaConfirmacion {
   numeroRegistro: number;
   fechaRespuesta: string;
 }
 
+export interface EstadoRespuesta {
+  yaRespondido: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PublicoService {
   private api = 'http://localhost:8080/publico';
+  private responderApi = 'http://localhost:8080/responder';
 
   constructor(private http: HttpClient) {}
 
+  // Públicos (bienvenida + preguntas)
   cargarEncuesta(token: string): Observable<EncuestaPublica> {
     return this.http.get<EncuestaPublica>(`${this.api}/encuestas/${token}`);
   }
@@ -59,11 +48,12 @@ export class PublicoService {
     return this.http.get<Pregunta[]>(`${this.api}/encuestas/${token}/preguntas`);
   }
 
-  participar(token: string, data: ParticipanteRequest): Observable<ParticipanteResponse> {
-    return this.http.post<ParticipanteResponse>(`${this.api}/encuestas/${token}/participar`, data);
+  // Autenticados (el JWT lo agrega el interceptor)
+  estado(token: string): Observable<EstadoRespuesta> {
+    return this.http.get<EstadoRespuesta>(`${this.responderApi}/${token}/estado`);
   }
 
-  enviarRespuestas(token: string, data: RespuestaEnvio): Observable<RespuestaConfirmacion> {
-    return this.http.post<RespuestaConfirmacion>(`${this.api}/encuestas/${token}/responder`, data);
+  enviar(token: string, respuestas: DetalleEnvio[]): Observable<RespuestaConfirmacion> {
+    return this.http.post<RespuestaConfirmacion>(`${this.responderApi}/${token}`, { respuestas });
   }
 }

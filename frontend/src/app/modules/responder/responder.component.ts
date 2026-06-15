@@ -1,11 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { PublicoService, EncuestaPublica, ParticipanteResponse, RespuestaConfirmacion } from '../../core/services/publico.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { PublicoService, EncuestaPublica, RespuestaConfirmacion } from '../../core/services/publico.service';
 import { Pregunta, Opcion } from '../../core/services/pregunta.service';
+import { AuthService } from '../../core/services/auth.service';
 
-type Paso = 'cargando' | 'error' | 'datos' | 'preguntas' | 'resumen' | 'fin';
+type Paso = 'cargando' | 'error' | 'auth' | 'preguntas' | 'resumen' | 'fin' | 'yaRespondido';
 
 interface RespuestaItem {
   idPregunta: number;
@@ -17,15 +17,10 @@ interface RespuestaItem {
   otrosTexto: string;       // texto libre de la opción "Otros" (mixta)
 }
 
-function noFuturo(control: AbstractControl): ValidationErrors | null {
-  if (!control.value) return null;
-  return new Date(control.value) > new Date() ? { futuro: true } : null;
-}
-
 @Component({
   selector: 'app-responder',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './responder.component.html',
   styleUrl: './responder.component.css'
 })
@@ -35,11 +30,8 @@ export class ResponderComponent implements OnInit {
   encuesta: EncuestaPublica | null = null;
   errorCarga = '';
 
-  form: FormGroup;
   errorForm = '';
   enviando = false;
-  participante: ParticipanteResponse | null = null;
-  hoy = new Date().toISOString().split('T')[0];
 
   // CU12 - Cuestionario
   preguntas: Pregunta[] = [];
@@ -53,25 +45,32 @@ export class ResponderComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private publicoService: PublicoService,
-    private fb: FormBuilder,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {
-    this.form = this.fb.group({
-      nombre: ['', [Validators.required, Validators.maxLength(128)]],
-      email: ['', [Validators.required, Validators.email]],
-      fechaNacimiento: ['', [Validators.required, noFuturo]]
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.token = this.route.snapshot.paramMap.get('token') ?? '';
     this.cargar();
   }
 
+  get autenticado(): boolean { return this.authService.isLoggedIn(); }
+  get nombreUsuario(): string { return this.authService.getUser()?.nombre ?? ''; }
+  get redirectParams() { return { redirect: `/responder/${this.token}` }; }
+
   cargar(): void {
     this.publicoService.cargarEncuesta(this.token).subscribe({
-      next: (e) => { this.encuesta = e; this.paso = 'datos'; this.cdr.detectChanges(); },
+      next: (e) => {
+        this.encuesta = e;
+        if (!this.autenticado) {
+          this.paso = 'auth';
+          this.cdr.detectChanges();
+        } else {
+          this.verificarEstado();
+        }
+      },
       error: (err) => {
         this.errorCarga = err.error?.mensaje || 'No se pudo cargar la encuesta.';
         this.paso = 'error';
@@ -80,21 +79,26 @@ export class ResponderComponent implements OnInit {
     });
   }
 
-  comenzar(): void {
-    if (this.form.invalid || this.enviando) { this.form.markAllAsTouched(); return; }
-    this.enviando = true;
-    this.errorForm = '';
-    this.publicoService.participar(this.token, this.form.value).subscribe({
+  private verificarEstado(): void {
+    this.publicoService.estado(this.token).subscribe({
       next: (res) => {
-        this.participante = res;
-        this.cargarPreguntas();
+        if (res.yaRespondido) {
+          this.paso = 'yaRespondido';
+          this.cdr.detectChanges();
+        } else {
+          this.cargarPreguntas();
+        }
       },
       error: (err) => {
-        this.enviando = false;
-        this.errorForm = err.error?.mensaje || 'No se pudieron registrar tus datos.';
+        this.errorCarga = err.error?.mensaje || 'No se pudo verificar tu estado.';
+        this.paso = 'error';
         this.cdr.detectChanges();
       }
     });
+  }
+
+  irAlInicio(): void {
+    this.router.navigateByUrl('/dashboard');
   }
 
   private cargarPreguntas(): void {
@@ -314,23 +318,20 @@ export class ResponderComponent implements OnInit {
     this.enviando = true;
     this.errorForm = '';
 
-    const payload = {
-      email: this.participante?.email ?? this.form.value.email,
-      respuestas: this.preguntas.map(p => {
-        const r = this.resp(p);
-        return {
-          idPregunta: p.idPregunta,
-          texto: r.texto,
-          idOpcion: r.idOpcion,
-          idOpciones: r.idOpciones,
-          valor: r.valor,
-          ranking: r.ranking,
-          otrosTexto: r.otrosTexto
-        };
-      })
-    };
+    const respuestas = this.preguntas.map(p => {
+      const r = this.resp(p);
+      return {
+        idPregunta: p.idPregunta,
+        texto: r.texto,
+        idOpcion: r.idOpcion,
+        idOpciones: r.idOpciones,
+        valor: r.valor,
+        ranking: r.ranking,
+        otrosTexto: r.otrosTexto
+      };
+    });
 
-    this.publicoService.enviarRespuestas(this.token, payload).subscribe({
+    this.publicoService.enviar(this.token, respuestas).subscribe({
       next: (res) => {
         this.confirmacion = res;
         this.enviando = false;
@@ -345,6 +346,4 @@ export class ResponderComponent implements OnInit {
       }
     });
   }
-
-  get f() { return this.form.controls; }
 }

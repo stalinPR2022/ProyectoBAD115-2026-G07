@@ -25,8 +25,8 @@
       </div>
     }
 
-    @if (paso === 'datos' && encuesta) {
-      <!-- Bienvenida + datos personales (CU11) -->
+    @if (paso === 'auth' && encuesta) {
+      <!-- Bienvenida + acceso (el encuestado debe identificarse con su cuenta) -->
       <div class="responder-header">
         <h1 class="responder-titulo">{{ encuesta.tituloEncuesta }}</h1>
         @if (encuesta.objetivoEncuesta) {
@@ -49,47 +49,27 @@
         <span class="meta-chip">Cierra: {{ encuesta.fechaCierre | date:'dd/MM/yyyy' }}</span>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="comenzar()" novalidate class="datos-form">
-        <p class="datos-intro">Antes de comenzar, ingresa tus datos:</p>
-
-        @if (errorForm) { <div class="alert-error">{{ errorForm }}</div> }
-
-        <div class="field-group">
-          <label for="nombre">Nombre completo <span class="required">*</span></label>
-          <input id="nombre" type="text" formControlName="nombre" placeholder="Tu nombre"
-            [class.input-error]="f['nombre'].invalid && f['nombre'].touched" />
-          @if (f['nombre'].invalid && f['nombre'].touched) {
-            <span class="field-error">El nombre es obligatorio.</span>
-          }
+      <div class="auth-cta">
+        <p class="auth-cta-texto">Para responder esta encuesta necesitas una cuenta. Inicia sesión o regístrate; al terminar podrás ver tus respuestas en tu panel.</p>
+        <div class="auth-cta-botones">
+          <a class="btn-comenzar" [routerLink]="['/login']" [queryParams]="redirectParams">Iniciar sesión</a>
+          <a class="btn-comenzar-sec" [routerLink]="['/registro']" [queryParams]="redirectParams">Crear cuenta</a>
         </div>
+      </div>
+    }
 
-        <div class="field-group">
-          <label for="email">Correo electrónico <span class="required">*</span></label>
-          <input id="email" type="email" formControlName="email" placeholder="correo@ejemplo.com"
-            [class.input-error]="f['email'].invalid && f['email'].touched" />
-          @if (f['email'].touched && f['email'].errors?.['required']) {
-            <span class="field-error">El correo es obligatorio.</span>
-          } @else if (f['email'].touched && f['email'].errors?.['email']) {
-            <span class="field-error">Ingresa un correo válido (ej. usuario@dominio.com).</span>
-          }
+    @if (paso === 'yaRespondido' && encuesta) {
+      <!-- El encuestado ya respondió esta encuesta -->
+      <div class="estado-centro">
+        <div class="icono-ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
         </div>
-
-        <div class="field-group">
-          <label for="fechaNacimiento">Fecha de nacimiento <span class="required">*</span></label>
-          <input id="fechaNacimiento" type="date" formControlName="fechaNacimiento" [max]="hoy"
-            [class.input-error]="f['fechaNacimiento'].invalid && f['fechaNacimiento'].touched" />
-          @if (f['fechaNacimiento'].touched && f['fechaNacimiento'].errors?.['required']) {
-            <span class="field-error">La fecha de nacimiento es obligatoria.</span>
-          } @else if (f['fechaNacimiento'].touched && f['fechaNacimiento'].errors?.['futuro']) {
-            <span class="field-error">La fecha de nacimiento no puede ser futura.</span>
-          }
-        </div>
-
-        <button type="submit" class="btn-comenzar" [disabled]="enviando">
-          @if (enviando) { <span class="spinner"></span> Registrando... }
-          @else { Comenzar encuesta }
-        </button>
-      </form>
+        <h2>Ya respondiste esta encuesta</h2>
+        <p class="estado-msg">«{{ encuesta.tituloEncuesta }}» ya tiene tu respuesta registrada. No puedes responderla de nuevo.</p>
+        <button type="button" class="btn-comenzar" (click)="irAlInicio()">Ir al inicio</button>
+      </div>
     }
 
     @if (paso === 'preguntas' && preguntaActual) {
@@ -240,7 +220,7 @@
             <path d="M20 6 9 17l-5-5"/>
           </svg>
         </div>
-        <h2>¡Gracias por participar{{ participante ? ', ' + participante.nombre : '' }}!</h2>
+        <h2>¡Gracias por participar{{ nombreUsuario ? ', ' + nombreUsuario : '' }}!</h2>
         <p class="estado-msg">Tus respuestas se registraron correctamente.</p>
         @if (confirmacion) {
           <div class="registro-box">
@@ -249,7 +229,7 @@
             <span class="registro-fecha">{{ confirmacion.fechaRespuesta | date:'dd/MM/yyyy' }}</span>
           </div>
         }
-        <p class="estado-nota">Ya puedes cerrar esta ventana.</p>
+        <button type="button" class="btn-comenzar" (click)="irAlInicio()">Ir al inicio</button>
       </div>
     }
 
