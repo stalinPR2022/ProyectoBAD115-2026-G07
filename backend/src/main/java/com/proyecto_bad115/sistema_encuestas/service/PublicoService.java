@@ -68,6 +68,38 @@ public class PublicoService {
         return resultado;
     }
 
+    /** Catálogo de encuestas publicadas y vigentes que cualquier usuario puede responder. */
+    public List<EncuestaDisponibleDTO> encuestasDisponibles(String email) {
+        String correo = normalizar(email);
+        LocalDate hoy = LocalDate.now();
+        return encuestaRepository.findByEstadoEncuesta(EstadoEncuesta.PUBLICADA).stream()
+                .filter(e -> e.getFechaCierre() == null || !e.getFechaCierre().isBefore(hoy))
+                .map(e -> toDisponibleDTO(e, correo))
+                .toList();
+    }
+
+    private EncuestaDisponibleDTO toDisponibleDTO(Encuesta e, String correo) {
+        EncuestaDisponibleDTO dto = new EncuestaDisponibleDTO();
+        dto.setIdEncuesta(e.getIdEncuesta());
+        dto.setTituloEncuesta(e.getTituloEncuesta());
+        dto.setObjetivoEncuesta(e.getObjetivoEncuesta());
+        dto.setGrupoMeta(e.getGrupoMeta());
+        dto.setFechaCierre(e.getFechaCierre());
+        dto.setTotalPreguntas(preguntaRepository.countByEncuestaIdEncuesta(e.getIdEncuesta()));
+        dto.setTokenPublico(e.getTokenPublico());
+
+        Integer estado = null;
+        if (respuestaRepository.existsByEncuestaIdEncuestaAndUsuarioEmailUserAndEstadoRespuesta(
+                e.getIdEncuesta(), correo, EstadoRespuesta.ENVIADA)) {
+            estado = EstadoRespuesta.ENVIADA;
+        } else if (respuestaRepository.findFirstByEncuestaIdEncuestaAndUsuarioEmailUserAndEstadoRespuesta(
+                e.getIdEncuesta(), correo, EstadoRespuesta.BORRADOR).isPresent()) {
+            estado = EstadoRespuesta.BORRADOR;
+        }
+        dto.setEstadoRespuesta(estado);
+        return dto;
+    }
+
     private MiEncuestaDTO toMiEncuestaDTO(Respuesta r) {
         Encuesta e = r.getEncuesta();
         boolean borrador = r.getEstadoRespuesta() != null && r.getEstadoRespuesta() == EstadoRespuesta.BORRADOR;

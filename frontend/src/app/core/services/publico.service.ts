@@ -44,11 +44,23 @@ export interface MiEncuesta {
   numeroRegistro: number | null;
 }
 
+export interface EncuestaDisponible {
+  idEncuesta: number;
+  tituloEncuesta: string;
+  objetivoEncuesta: string;
+  grupoMeta: string;
+  fechaCierre: string;
+  totalPreguntas: number;
+  tokenPublico: string;
+  estadoRespuesta: number | null; // null=sin responder, 1=borrador, 2=enviada
+}
+
 @Injectable({ providedIn: 'root' })
 export class PublicoService {
   private api = 'http://localhost:8080/publico';
   private responderApi = 'http://localhost:8080/responder';
   private misEncuestasApi = 'http://localhost:8080/mis-encuestas';
+  private disponiblesApi = 'http://localhost:8080/encuestas-disponibles';
 
   constructor(private http: HttpClient) {}
 
@@ -81,5 +93,10 @@ export class PublicoService {
   // Etapa 18 - Panel del encuestado
   misEncuestas(): Observable<MiEncuesta[]> {
     return this.http.get<MiEncuesta[]>(this.misEncuestasApi);
+  }
+
+  // Catálogo de encuestas disponibles para responder
+  disponibles(): Observable<EncuestaDisponible[]> {
+    return this.http.get<EncuestaDisponible[]>(this.disponiblesApi);
   }
 }

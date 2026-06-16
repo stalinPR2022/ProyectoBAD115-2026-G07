@@ -115,16 +115,18 @@ public class DataInitializer implements CommandLineRunner {
 
     private void asignarPrivilegiosEncuestado() {
         rolRepository.findByNombreRol("ENCUESTADO").ifPresent(encuestado ->
-            privilegioRepository.findByNombrePrivilegio("Mis Encuestas").ifPresent(priv -> {
-                boolean yaAsignado = rolPrivilegioRepository.findByRolIdRol(encuestado.getIdRol())
-                        .stream().anyMatch(rp -> rp.getPrivilegio().getIdPrivilegio().equals(priv.getIdPrivilegio()));
-                if (!yaAsignado) {
-                    RolPrivilegio rp = new RolPrivilegio();
-                    rp.setRol(encuestado);
-                    rp.setPrivilegio(priv);
-                    rolPrivilegioRepository.save(rp);
-                }
-            })
+            List.of("Responder Encuestas", "Mis Encuestas").forEach(nombre ->
+                privilegioRepository.findByNombrePrivilegio(nombre).ifPresent(priv -> {
+                    boolean yaAsignado = rolPrivilegioRepository.findByRolIdRol(encuestado.getIdRol())
+                            .stream().anyMatch(rp -> rp.getPrivilegio().getIdPrivilegio().equals(priv.getIdPrivilegio()));
+                    if (!yaAsignado) {
+                        RolPrivilegio rp = new RolPrivilegio();
+                        rp.setRol(encuestado);
+                        rp.setPrivilegio(priv);
+                        rolPrivilegioRepository.save(rp);
+                    }
+                })
+            )
         );
     }
 

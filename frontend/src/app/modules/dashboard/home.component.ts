@@ -16,6 +16,19 @@ const ICONOS: Record<string, string> = {
 };
 const ICONO_DEFAULT = 'M4 6h16M4 12h16M4 18h16';
 
+// Mismo orden que el sidebar (grupo Encuestas primero, Responder Encuestas al inicio)
+const ORDEN: Record<string, { grupo: string; orden: number }> = {
+  'Responder Encuestas':   { grupo: 'Encuestas', orden: 0 },
+  'Mis Encuestas':         { grupo: 'Encuestas', orden: 1 },
+  'Gestionar Encuestas':   { grupo: 'Encuestas', orden: 2 },
+  'Ver Resultados':        { grupo: 'Encuestas', orden: 3 },
+  'Gestionar Usuarios':    { grupo: 'Administración', orden: 1 },
+  'Asignar Roles':         { grupo: 'Administración', orden: 2 },
+  'Gestionar Privilegios': { grupo: 'Administración', orden: 3 },
+  'Desbloquear Usuarios':  { grupo: 'Administración', orden: 4 },
+};
+const ORDEN_GRUPOS = ['Encuestas', 'Administración', 'General'];
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -37,8 +50,18 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.menuService.obtenerMenu().subscribe({
-      next: (items) => { this.accesos = items; this.cdr.detectChanges(); },
+      next: (items) => { this.accesos = this.ordenar(items); this.cdr.detectChanges(); },
       error: () => {}
+    });
+  }
+
+  private ordenar(items: MenuItem[]): MenuItem[] {
+    return [...items].sort((a, b) => {
+      const ca = ORDEN[a.nombre] ?? { grupo: 'General', orden: 99 };
+      const cb = ORDEN[b.nombre] ?? { grupo: 'General', orden: 99 };
+      const ga = ORDEN_GRUPOS.indexOf(ca.grupo);
+      const gb = ORDEN_GRUPOS.indexOf(cb.grupo);
+      return ga !== gb ? ga - gb : ca.orden - cb.orden;
     });
   }
 

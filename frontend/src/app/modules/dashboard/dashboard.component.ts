@@ -19,6 +19,7 @@ const CRUMB_LABELS: Record<string, string> = {
   preguntas: 'Preguntas',
   resultados: 'Resultados',
   'mis-encuestas': 'Mis Encuestas',
+  responder: 'Responder Encuestas',
 };
 
 const ICONOS: Record<string, string> = {
@@ -36,10 +37,10 @@ const ICONO_DEFAULT = 'M4 6h16M4 12h16M4 18h16';
 
 // Agrupación y orden lógico de las opciones del menú (por nombre de privilegio)
 const ORDEN: Record<string, { grupo: string; orden: number }> = {
-  'Mis Encuestas':         { grupo: 'Encuestas', orden: 0 },
-  'Gestionar Encuestas':   { grupo: 'Encuestas', orden: 1 },
-  'Ver Resultados':        { grupo: 'Encuestas', orden: 2 },
-  'Responder Encuestas':   { grupo: 'Encuestas', orden: 3 },
+  'Responder Encuestas':   { grupo: 'Encuestas', orden: 0 },
+  'Mis Encuestas':         { grupo: 'Encuestas', orden: 1 },
+  'Gestionar Encuestas':   { grupo: 'Encuestas', orden: 2 },
+  'Ver Resultados':        { grupo: 'Encuestas', orden: 3 },
   'Gestionar Usuarios':    { grupo: 'Administración', orden: 1 },
   'Asignar Roles':         { grupo: 'Administración', orden: 2 },
   'Gestionar Privilegios': { grupo: 'Administración', orden: 3 },

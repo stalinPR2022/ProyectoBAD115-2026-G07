@@ -1,0 +1,52 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Responder Encuestas</h1>
+      <p class="page-subtitle">Explora las encuestas publicadas y responde las que quieras</p>
+    </div>
+    <div class="header-actions">
+      @if (!cargando && encuestas.length > 0) {
+        <app-search-bar [(valor)]="busqueda" placeholder="Buscar por título, objetivo o grupo meta..." />
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+
+  @if (cargando) {
+    <div class="empty-state">Cargando encuestas...</div>
+  } @else if (encuestas.length === 0) {
+    <div class="empty-state">
+      <p>No hay encuestas disponibles en este momento.</p>
+      <p>Cuando se publiquen encuestas, aparecerán aquí para responder.</p>
+    </div>
+  } @else if (filtradas.length === 0) {
+    <div class="empty-state">No se encontraron encuestas que coincidan con tu búsqueda.</div>
+  } @else {
+    <div class="cards-grid">
+      @for (e of filtradas; track e.idEncuesta) {
+        <div class="encuesta-card">
+          <div class="card-header">
+            @if (e.estadoRespuesta === 2) {
+              <span class="badge badge-respondida">Respondida</span>
+            } @else if (e.estadoRespuesta === 1) {
+              <span class="badge badge-progreso">En progreso</span>
+            } @else {
+              <span class="badge badge-disponible">Disponible</span>
+            }
+            <span class="card-preguntas">{{ e.totalPreguntas }} pregunta{{ e.totalPreguntas !== 1 ? 's' : '' }}</span>
+          </div>
+
+          <h3 class="card-title">{{ e.tituloEncuesta }}</h3>
+          @if (e.grupoMeta) { <p class="card-meta">Dirigida a: {{ e.grupoMeta }}</p> }
+          @if (e.objetivoEncuesta) { <p class="card-objetivo">{{ e.objetivoEncuesta }}</p> }
+
+          <div class="card-foot">
+            <span class="card-cierre">Cierra: {{ e.fechaCierre | date:'dd/MM/yyyy' }}</span>
+            <button class="btn-responder" (click)="responder(e)">{{ etiquetaBoton(e) }} →</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
