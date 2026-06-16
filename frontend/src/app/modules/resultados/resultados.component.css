@@ -1,7 +1,8 @@
 .page { padding: 32px; }
 
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 28px; }
 .header-left { display: flex; flex-direction: column; gap: 8px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
 
 .btn-back {
   display: inline-flex; align-items: center; gap: 6px;
@@ -22,20 +23,27 @@
 .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
 .empty-grande { background: #fff; border: 1px dashed #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
 
-/* Resumen */
-.resumen-cards { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
-.stat-card {
-  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-  padding: 18px 22px; display: flex; flex-direction: column; gap: 4px; min-width: 150px;
+/* Mini-stats en el header (junto al título) */
+.mini-stat {
+  display: flex; flex-direction: column; align-items: flex-start;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 7px 14px; line-height: 1.15;
 }
-.stat-card-ancha { flex: 1; min-width: 220px; }
-.stat-num { font-size: 1.7rem; font-weight: 800; color: var(--brand-primary); line-height: 1.1; }
-.stat-texto { font-size: 1.1rem; }
-.stat-label { font-size: 0.8rem; color: #6b7280; }
+.mini-num { font-size: 1.3rem; font-weight: 800; color: var(--brand-primary); }
+.mini-label { font-size: 0.7rem; color: #6b7280; white-space: nowrap; }
 
-/* Resultados por pregunta */
-.preguntas-resultados { display: flex; flex-direction: column; gap: 18px; }
+/* Resultados por pregunta (2 columnas: 1 y 2 a la par, 3 y 4 a la par, ...) */
+.preguntas-resultados {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  align-items: start;
+}
 .resultado-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 22px 24px; }
+
+@media (max-width: 900px) {
+  .preguntas-resultados { grid-template-columns: 1fr; }
+}
 
 .resultado-head {
   display: flex; justify-content: space-between; align-items: flex-start;
