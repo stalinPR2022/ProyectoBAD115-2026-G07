@@ -38,18 +38,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email = jwtService.extractEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            usuarioRepository.findByEmailUser(email).ifPresent(usuario -> {
-                if (jwtService.isTokenValid(token, email)) {
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            email, null, List.of()
-                    );
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
-            });
+        // Un token inválido o expirado se ignora (no debe romper endpoints públicos como /auth/login)
+        try {
+            String email = jwtService.extractEmail(token);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                usuarioRepository.findByEmailUser(email).ifPresent(usuario -> {
+                    if (jwtService.isTokenValid(token, email)) {
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                email, null, List.of()
+                        );
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Token no válido: continúa sin autenticar
         }
 
         filterChain.doFilter(request, response);
