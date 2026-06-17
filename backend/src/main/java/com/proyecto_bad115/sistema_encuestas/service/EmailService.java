@@ -1,5 +1,6 @@
 package com.proyecto_bad115.sistema_encuestas.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -9,13 +10,17 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    // El remitente siempre coincide con la cuenta autenticada en application.yaml
+    @Value("${spring.mail.username}")
+    private String remitente;
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     public void enviarDesbloqueo(String destinatario, String nombreUsuario) {
         SimpleMailMessage mensaje = new SimpleMailMessage();
-        mensaje.setFrom("sondevia.sistema@gmail.com");
+        mensaje.setFrom(remitente);
         mensaje.setTo(destinatario);
         mensaje.setSubject("Sondevia - Cuenta desbloqueada");
         mensaje.setText(
@@ -30,7 +35,7 @@ public class EmailService {
 
     public void enviarBienvenida(String destinatario, String nombreUsuario, String contraseniaTemporal) {
         SimpleMailMessage mensaje = new SimpleMailMessage();
-        mensaje.setFrom("sondevia.sistema@gmail.com");
+        mensaje.setFrom(remitente);
         mensaje.setTo(destinatario);
         mensaje.setSubject("Sondevia - Bienvenido al sistema");
         mensaje.setText(

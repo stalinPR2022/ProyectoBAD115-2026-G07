@@ -22,7 +22,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: sondevia.sistema@gmail.com
+    username: notificaciones.sondevia@gmail.com
     password: sgwqqlsweygumnpz
     properties:
       mail:
